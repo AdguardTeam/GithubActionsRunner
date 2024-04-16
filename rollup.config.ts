@@ -41,6 +41,6 @@ const api = {
     plugins: [
         ...commonPlugins,
     ],
-}
+};
 
 export default [bin, api];

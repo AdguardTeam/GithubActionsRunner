@@ -14,6 +14,9 @@ const myFormat = format.printf(({ level, message, timestamp }) => {
     return `${timestamp} ${level}: ${message}`;
 });
 
+const transport = new transports.Console();
+
+// FIXME description
 const logger = createLogger({
     level: 'info',
     format: combine(
@@ -24,8 +27,13 @@ const logger = createLogger({
     ),
     defaultMeta: { service: 'github-actions-runner' },
     transports: [
-        new transports.Console(),
+        transport,
     ],
 });
 
-export { logger };
+// FIXME description
+const setLoggerLevel = (logLevel: string): void => {
+    transport.level = logLevel;
+};
+
+export { logger, setLoggerLevel };

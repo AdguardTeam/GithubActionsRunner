@@ -1,11 +1,15 @@
 import { GithubApiClient } from './github/GithubApiClient';
 import { GithubApiManager } from './github/GithubApiManager';
-import { logger } from './utils/logger';
+import { logger, setLoggerLevel } from './utils/logger';
 
+/**
+ * FIXME good description
+ */
 interface GitHubActionsRunnerOptions {
     token: string;
     owner: string;
     repo: string;
+    verbose?: boolean;
 }
 
 /**
@@ -23,11 +27,20 @@ export class GitHubActionsRunner {
      * @param token
      * @param owner
      * @param repo
+     * @param verbose
      */
-    constructor({ token, owner, repo }: GitHubActionsRunnerOptions) {
+    constructor({
+        token,
+        owner,
+        repo,
+        verbose,
+    }: GitHubActionsRunnerOptions) {
         this.owner = owner;
         this.repo = repo;
         this.githubApiManager = new GithubApiManager(new GithubApiClient(token, owner, repo));
+        if (verbose) {
+            setLoggerLevel('debug');
+        }
     }
 
     /**

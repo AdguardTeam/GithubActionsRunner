@@ -15,11 +15,13 @@ program
 
 program.command('run-action')
     .description('Triggers a GitHub Action workflow run')
-    .requiredOption('--repo <repo>', 'The repository name in the format owner/repo')
-    .requiredOption('--workflow <workflow>', 'Workflow filename to trigger. Example: test.yml')
-    .requiredOption('--branch <branch>', 'The branch name')
-    .requiredOption('--rev <revision>', 'The commit revision')
-    .option('--artifacts-path <artifactsPath>', 'The local path to download artifacts to')
+    .requiredOption('-r, --repo <repo>', 'repository name in the format "owner/repo"')
+    .requiredOption('-w, --workflow <workflow>', 'workflow filename to trigger. ex: test.yml')
+    .requiredOption('-b, --branch <branch>', 'branch name')
+    .requiredOption('-v, --rev <revision>', 'commit revision')
+    // FIXME add to README if not specified, wont download the artifacts
+    .option('-a, --artifacts-path <artifacts-path>', 'local path to download artifacts to')
+    .option('-i, --verbose', 'enable verbose mode', false)
     .action(async (options) => {
         const {
             repo,
@@ -27,6 +29,7 @@ program.command('run-action')
             branch,
             rev,
             artifactsPath,
+            verbose,
         } = options;
         const [owner, repoName] = repo.split('/');
         const token = process.env.GITHUB_TOKEN;
@@ -35,7 +38,12 @@ program.command('run-action')
             process.exit(1);
         }
 
-        const runner = new GitHubActionsRunner({ token, owner, repo: repoName });
+        const runner = new GitHubActionsRunner({
+            token,
+            owner,
+            repo: repoName,
+            verbose,
+        });
 
         try {
             await runner.runAction({
