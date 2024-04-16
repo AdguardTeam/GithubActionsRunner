@@ -18,7 +18,9 @@ export default {
     ],
     plugins: [
         json(),
-        resolve(),
+        resolve({
+            preferBuiltins: true,
+        }),
         commonjs(),
         typescript(),
     ],
