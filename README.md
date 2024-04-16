@@ -25,20 +25,18 @@ yarn add @adguard/github-actions-runner
 The CLI tool can be used to trigger and manage GitHub Actions with the following command format:
 
 ```bash
-github-actions-runner run-action \
---repo="<owner/repo>" \
---workflow="<workflow_file.yml>" \
---branch="<branch_name>" \
---rev="<commit_revision>" \
---artifacts-path="<path_to_download_artifacts>"
-```
+Usage: @adguard/github-actions-runner run-action [options]
 
-### Parameters:
-`--repo`: Specifies the GitHub repository in the format "owner/repo".
-`--workflow`: The workflow file to trigger (e.g., build.yml).
-`--branch`: The branch name to run the workflow against.
-`--rev`: The specific commit revision.
-`--artifacts-path`: (Optional) The local path to download the artifacts to.
+Triggers a GitHub Action workflow run
+
+Options:
+  --repo <repo>                     The repository name in the format owner/repo
+  --workflow <workflow>             Workflow filename to trigger. Example: test.yml
+  --branch <branch>                 The branch name
+  --rev <revision>                  The commit revision
+  --artifacts-path <artifactsPath>  The local path to download artifacts to
+  -h, --help                        display help for command
+```
 
 ### Note:
 Ensure that you have a valid GITHUB_TOKEN set in your environment variables for authentication.
@@ -50,7 +48,7 @@ To run a GitHub Action workflow with the specified configuration:
 github-actions-runner run-action \
 --repo="adguard/github-actions-runner" \
 --workflow="build.yml" \
---branch="main" \
+--branch="master" \
 --rev="abc1234" \
 --artifacts-path="./downloads"
 ```

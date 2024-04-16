@@ -9,6 +9,9 @@
         "test": "jest",
         "lint": "eslint --cache . && tsc -p tsconfig.eslint.json --noEmit"
     },
+    "bin": {
+        "actions-runner": "dist/bin/index.js"
+    },
     "keywords": [
         "adguard",
         "github-actions",

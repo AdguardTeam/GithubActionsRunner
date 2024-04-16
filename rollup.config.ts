@@ -3,7 +3,29 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 
-export default {
+const commonPlugins = [
+    json(),
+    resolve({
+        preferBuiltins: true,
+    }),
+    commonjs(),
+    typescript(),
+];
+
+const bin = {
+    input: 'src/bin/index.ts',
+    output: [
+        {
+            dir: 'dist/bin',
+            format: 'cjs',
+        },
+    ],
+    plugins: [
+        ...commonPlugins,
+    ],
+};
+
+const api = {
     input: 'src/index.ts',
     output: [
         {
@@ -17,11 +39,8 @@ export default {
         },
     ],
     plugins: [
-        json(),
-        resolve({
-            preferBuiltins: true,
-        }),
-        commonjs(),
-        typescript(),
+        ...commonPlugins,
     ],
-};
+}
+
+export default [bin, api];
