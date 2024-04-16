@@ -2,7 +2,6 @@
 // - README.md
 // - CI/CD
 // - timeout for the action
-// - description in the packages.json
 // - changelog
 // - github workflow
 // - docker image
