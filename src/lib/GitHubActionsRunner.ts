@@ -13,7 +13,7 @@ interface GitHubActionsRunnerOptions {
 }
 
 /**
- *
+ * FIXME good description
  */
 export class GitHubActionsRunner {
     private githubApiManager: GithubApiManager;
@@ -53,10 +53,15 @@ export class GitHubActionsRunner {
         workflow,
         rev,
         artifactsPath,
+        commitTimeoutMs,
+        branchTimeoutMs,
     }: {
+        // FIXME extract this type to the interfaces
         branch: string;
         workflow: string;
-        rev: string
+        rev: string,
+        commitTimeoutMs: number,
+        branchTimeoutMs: number,
         artifactsPath?: string,
     }): Promise<void> {
         logger.info(`Starting action for repository "${this.owner}/${this.repo}"`);
@@ -66,8 +71,8 @@ export class GitHubActionsRunner {
         logger.info(`Artifacts path: "${artifactsPath}"`);
 
         // TODO wait for the tag, not sure if we need this
-        await this.githubApiManager.waitForCommit(rev);
-        await this.githubApiManager.waitForBranch(branch);
+        await this.githubApiManager.waitForCommit(rev, commitTimeoutMs);
+        await this.githubApiManager.waitForBranch(branch, branchTimeoutMs);
 
         const customWorkflowRunId = await this.githubApiManager.triggerWorkflow(workflow, branch);
         await this.githubApiManager.waitForWorkflowRunCreation(branch, customWorkflowRunId);

@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+
 import { GitHubActionsRunner } from '../lib/GitHubActionsRunner';
 import packageJson from '../../package.json';
+import { logger } from '../lib/utils/logger';
+import { DEFAULT_WAIT_FOR_BRANCH_TIMEOUT_MS, DEFAULT_WAIT_FOR_COMMIT_TIMEOUT_MS } from '../lib/constants';
 
 import 'dotenv/config';
-import { logger } from '../lib/utils/logger';
 
 const program = new Command();
 
@@ -21,6 +23,18 @@ program.command('run-action')
     .requiredOption('-v, --rev <revision>', 'commit revision')
     // FIXME add to README if not specified, wont download the artifacts
     .option('-a, --artifacts-path <artifacts-path>', 'local path to download artifacts to')
+    .option(
+        '--commit-timeout <timeout-sec>',
+        'wait timeout for the commit to appear in the repository in seconds',
+        (value) => parseInt(value, 10) * 1000,
+        DEFAULT_WAIT_FOR_COMMIT_TIMEOUT_MS / 1000,
+    )
+    .option(
+        '--branch-timeout <timeout-sec>',
+        'wait timeout for the branch to appear in the repository in seconds',
+        (value) => parseInt(value, 10) * 1000,
+        DEFAULT_WAIT_FOR_BRANCH_TIMEOUT_MS / 1000,
+    )
     .option('-i, --verbose', 'enable verbose mode', false)
     .action(async (options) => {
         const {
@@ -30,6 +44,8 @@ program.command('run-action')
             rev,
             artifactsPath,
             verbose,
+            commitTimeout,
+            branchTimeout,
         } = options;
         const [owner, repoName] = repo.split('/');
         const token = process.env.GITHUB_TOKEN;
@@ -51,6 +67,8 @@ program.command('run-action')
                 workflow,
                 rev,
                 artifactsPath,
+                commitTimeoutMs: commitTimeout,
+                branchTimeoutMs: branchTimeout,
             });
         } catch (e) {
             logger.error(e);

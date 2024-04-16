@@ -4,10 +4,12 @@ import path from 'path';
 import { promises as fsPromises } from 'fs';
 import { ensureDir } from 'fs-extra';
 import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
-import { sleep } from '../utils/time/sleep';
-import { isErrorWithStatus } from '../utils/errors/errors';
+
+import { sleep } from '../utils/time';
+import { isErrorWithStatus } from '../utils/errors';
 import { type GithubApiClient } from './GithubApiClient';
 import { logger } from '../utils/logger';
+import { POLLING_INTERVAL_MS } from '../constants';
 
 type WorkflowRuns = RestEndpointMethodTypes['actions']['listWorkflowRunsForRepo']['response']['data']['workflow_runs'];
 export type WorkflowRun = WorkflowRuns[number];
@@ -17,20 +19,8 @@ export type Artifact = Artifacts[number];
 export class GithubApiManager {
     private readonly githubApiClient: GithubApiClient;
 
-    private readonly waitForBranchTimeoutMs: number;
-
-    private readonly waitForBranchPollingIntervalMs: number;
-
-    private readonly waitForCommitTimeoutMs: number;
-
-    private readonly waitForCommitPollingIntervalMs: number;
-
     constructor(apiClient: GithubApiClient) {
         this.githubApiClient = apiClient;
-        this.waitForBranchTimeoutMs = 60000;
-        this.waitForBranchPollingIntervalMs = 5000;
-        this.waitForCommitTimeoutMs = 60000;
-        this.waitForCommitPollingIntervalMs = 5000;
     }
 
     /**
@@ -53,8 +43,12 @@ export class GithubApiManager {
     /**
      * Waits for a commit to exist in the repository.
      * @param commitRef The reference for the commit to wait for (SHA, branch name, or tag name).
+     * @param waitForCommitTimeoutMs The maximum time to wait for the commit to appear in repository in milliseconds.
      */
-    async waitForCommit(commitRef: string): Promise<void> {
+    async waitForCommit(
+        commitRef: string,
+        waitForCommitTimeoutMs: number,
+    ): Promise<void> {
         logger.info(`Waiting for commit ${commitRef}...`);
         const startTime = Date.now();
 
@@ -65,15 +59,15 @@ export class GithubApiManager {
                 return;
             }
 
-            if (Date.now() - startTime > this.waitForCommitTimeoutMs) {
+            if (Date.now() - startTime > waitForCommitTimeoutMs) {
                 throw new Error(`Timeout waiting for commit ${commitRef}.`);
             }
 
             logger.debug(
-                `Commit ${commitRef} not found. Retrying in ${this.waitForCommitPollingIntervalMs / 1000} seconds...`,
+                `Commit ${commitRef} not found. Retrying in ${POLLING_INTERVAL_MS / 1000} seconds...`,
             );
 
-            await sleep(this.waitForCommitPollingIntervalMs);
+            await sleep(POLLING_INTERVAL_MS);
             await tryFetchCommit();
         };
 
@@ -99,8 +93,12 @@ export class GithubApiManager {
     /**
      * Waits for a branch to exist.
      * @param branchName The name of the branch to wait for.
+     * @param waitForBranchTimeoutMs
      */
-    async waitForBranch(branchName: string): Promise<void> {
+    async waitForBranch(
+        branchName: string,
+        waitForBranchTimeoutMs: number,
+    ): Promise<void> {
         logger.info(`Waiting for branch "${branchName}"...`);
         const startTime = Date.now();
 
@@ -111,15 +109,15 @@ export class GithubApiManager {
                 return;
             }
 
-            if (Date.now() - startTime > this.waitForBranchTimeoutMs) {
+            if (Date.now() - startTime > waitForBranchTimeoutMs) {
                 throw new Error(`Timeout waiting for branch "${branchName}".`);
             }
 
             logger.debug(
                 `Branch "${branchName}" not found. 
-                Retrying in "${this.waitForBranchPollingIntervalMs / 1000}" seconds...`,
+                Retrying in "${POLLING_INTERVAL_MS / 1000}" seconds...`,
             );
-            await sleep(this.waitForBranchPollingIntervalMs);
+            await sleep(POLLING_INTERVAL_MS);
             await tryFetchBranch();
         };
 
