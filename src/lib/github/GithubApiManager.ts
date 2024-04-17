@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import axios from 'axios';
+import axios, { HttpStatusCode } from 'axios';
 import path from 'path';
 import { promises as fsPromises } from 'fs';
 import { ensureDir } from 'fs-extra';
@@ -31,9 +31,9 @@ export class GithubApiManager {
     async hasCommit(commitRef: string): Promise<boolean> {
         try {
             const response = await this.githubApiClient.getCommit(commitRef);
-            return response.status === 200;
+            return response.status === HttpStatusCode.Ok;
         } catch (error) {
-            if (isErrorWithStatus(error) && error.status === 404) {
+            if (isErrorWithStatus(error) && error.status === HttpStatusCode.NotFound) {
                 return false;
             }
             throw error;
@@ -81,9 +81,9 @@ export class GithubApiManager {
     async hasBranch(branch: string): Promise<boolean> {
         try {
             const response = await this.githubApiClient.getBranch(branch);
-            return response.status === 200;
+            return response.status === HttpStatusCode.Ok;
         } catch (error) {
-            if (isErrorWithStatus(error) && error.status === 404) {
+            if (isErrorWithStatus(error) && error.status === HttpStatusCode.NotFound) {
                 return false;
             }
             throw error;
@@ -138,7 +138,7 @@ export class GithubApiManager {
         logger.debug('Generated custom id for the workflow run:', workflowRunCustomId);
 
         const response = await this.githubApiClient.createDispatchEvent(workflow, branch, workflowRunCustomId);
-        if (response.status !== 204) {
+        if (response.status !== HttpStatusCode.NoContent) {
             throw new Error(`Failed to trigger workflow: ${response.status}`);
         }
 
@@ -283,12 +283,9 @@ export class GithubApiManager {
                 responseType: 'arraybuffer',
                 // FIXME Ensure you handle large files correctly:
                 maxContentLength: Infinity,
-                // FIXME possibly this should be set in the configuration
-                maxBodyLength: Infinity,
             });
 
-            // FIXME use constants from the axios library
-            if (response.status !== 200) {
+            if (response.status !== HttpStatusCode.Ok) {
                 throw new Error(`Failed to download file: ${response.statusText}`);
             }
 
@@ -299,6 +296,7 @@ export class GithubApiManager {
                 `${artifact.name}.zip`, // FIXME extract extension to the constant
             );
             await ensureDir(dirPath);
+            // FIXME unzip file
             await fsPromises.writeFile(fullPath, response.data);
             logger.info(`Artifact downloaded to: ${fullPath}`);
         } catch (error) {
@@ -324,7 +322,7 @@ export class GithubApiManager {
     async getDownloadUrl(artifactId: number): Promise<string> {
         try {
             const response = await this.githubApiClient.downloadArtifact(artifactId);
-            if (response.status === 200 && response.url) {
+            if (response.status === HttpStatusCode.Ok && response.url) {
                 return response.url;
             }
             throw new Error(`Failed to get download URL for artifact: "${artifactId}"`);
