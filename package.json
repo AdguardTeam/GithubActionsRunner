@@ -14,7 +14,7 @@
         "test:smoke": "(cd __tests__/smoke/esm && pnpm test) && (cd __tests__/smoke/cjs && pnpm test) && (cd __tests__/smoke/typescript && pnpm test)"
     },
     "bin": {
-        "actions-runner": "dist/bin/index.js"
+        "github-actions-runner": "dist/bin/index.js"
     },
     "main": "./dist/index.js",
     "module": "./dist/es/index.mjs",

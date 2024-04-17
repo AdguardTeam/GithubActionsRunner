@@ -25,17 +25,20 @@ yarn add @adguard/github-actions-runner
 The CLI tool can be used to trigger and manage GitHub Actions with the following command format:
 
 ```bash
-Usage: @adguard/github-actions-runner run-action [options]
+Usage: github-actions-runner run-action [options]
 
 Triggers a GitHub Action workflow run
 
 Options:
-  --repo <repo>                     The repository name in the format owner/repo
-  --workflow <workflow>             Workflow filename to trigger. Example: test.yml
-  --branch <branch>                 The branch name
-  --rev <revision>                  The commit revision
-  --artifacts-path <artifactsPath>  The local path to download artifacts to
-  -h, --help                        display help for command
+  -r, --repo <repo>                      repository specified as "owner/repo", e.g., "AdguardTeam/GithubActionsRunner"
+  -w, --workflow <workflow>              workflow file to trigger, e.g., "test.yml"
+  -b, --branch <branch>                  branch name
+  -v, --rev <revision>                   commit revision
+  -a, --artifacts-path [artifacts-path]  local path for downloading artifacts; if not specified, artifacts will not be downloaded
+  --commit-timeout [timeout-sec]         timeout in seconds to wait for the commit to appear in the repository (default: 300)
+  --branch-timeout [timeout-sec]         timeout in seconds to wait for the branch to appear in the repository (default: 300)
+  -i, --verbose                          enable verbose mode (default: false)
+  -h, --help                             display help for command
 ```
 
 ### Note:
@@ -46,11 +49,14 @@ To run a GitHub Action workflow with the specified configuration:
 
 ```
 github-actions-runner run-action \
---repo="adguard/github-actions-runner" \
---workflow="build.yml" \
---branch="master" \
---rev="abc1234" \
---artifacts-path="./downloads"
+  --repo "AdguardTeam/GithubActionsRunner" \
+  --workflow "build.yml" \
+  --branch "master" \
+  --rev "abc1234" \
+  --artifacts-path "./downloads" \
+  --commit-timeout 300 \
+  --branch-timeout 300 \
+  --verbose
 ```
 
 ## Contributing

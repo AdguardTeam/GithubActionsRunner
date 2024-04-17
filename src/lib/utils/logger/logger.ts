@@ -1,5 +1,3 @@
-// FIXME this linter error without turning off the rule:
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { createLogger, format, transports } from 'winston';
 
 const {

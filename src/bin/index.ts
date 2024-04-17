@@ -11,27 +11,32 @@ import 'dotenv/config';
 const program = new Command();
 
 program
-    .name(packageJson.name)
-    .description('CLI to run and manage GitHub Actions')
+    .name(packageJson.name.replace('@adguard/', ''))
+    .description('A CLI tool for running and managing GitHub Actions workflows.')
     .version(packageJson.version);
 
 program.command('run-action')
     .description('Triggers a GitHub Action workflow run')
-    .requiredOption('-r, --repo <repo>', 'repository name in the format "owner/repo"')
-    .requiredOption('-w, --workflow <workflow>', 'workflow filename to trigger. ex: test.yml')
+    .requiredOption(
+        '-r, --repo <repo>',
+        'repository specified as "owner/repo", e.g., "AdguardTeam/GithubActionsRunner"',
+    )
+    .requiredOption('-w, --workflow <workflow>', 'workflow file to trigger, e.g., "test.yml"')
     .requiredOption('-b, --branch <branch>', 'branch name')
     .requiredOption('-v, --rev <revision>', 'commit revision')
-    // FIXME add to README if not specified, wont download the artifacts
-    .option('-a, --artifacts-path <artifacts-path>', 'local path to download artifacts to')
     .option(
-        '--commit-timeout <timeout-sec>',
-        'wait timeout for the commit to appear in the repository in seconds',
+        '-a, --artifacts-path [artifacts-path]',
+        'local path for downloading artifacts; if not specified, artifacts will not be downloaded',
+    )
+    .option(
+        '--commit-timeout [timeout-sec]',
+        'timeout in seconds to wait for the commit to appear in the repository',
         (value) => parseInt(value, 10) * 1000,
         DEFAULT_WAIT_FOR_COMMIT_TIMEOUT_MS / 1000,
     )
     .option(
-        '--branch-timeout <timeout-sec>',
-        'wait timeout for the branch to appear in the repository in seconds',
+        '--branch-timeout [timeout-sec]',
+        'timeout in seconds to wait for the branch to appear in the repository',
         (value) => parseInt(value, 10) * 1000,
         DEFAULT_WAIT_FOR_BRANCH_TIMEOUT_MS / 1000,
     )
@@ -50,7 +55,7 @@ program.command('run-action')
         const [owner, repoName] = repo.split('/');
         const token = process.env.GITHUB_TOKEN;
         if (!token) {
-            logger.error('<GITHUB_TOKEN> environment variable is required');
+            logger.error('The <GITHUB_TOKEN> environment variable is required.');
             process.exit(1);
         }
 
