@@ -161,17 +161,15 @@ export class GithubApiManager {
     }
 
     /**
-     * Waits for a specific workflow run to complete with a timeoutMs.
+     * Waits for a specific workflow run to complete with a workflowRunCreationTimeoutMs.
      * @param branch The branch for the workflow run.
      * @param customWorkflowRunId The ID of the workflow run.
-     * @param timeoutMs The maximum time to wait in milliseconds.
-     * @param intervalMs The intervalMs between checks in milliseconds.
+     * @param workflowRunCreationTimeoutMs The maximum time to wait in milliseconds.
      */
     async waitForWorkflowRunCreation(
         branch: string,
         customWorkflowRunId: string,
-        timeoutMs: number = 3000000, // FIXME move to the configuration
-        intervalMs: number = 5000,
+        workflowRunCreationTimeoutMs: number,
     ): Promise<WorkflowRun | null> {
         logger.info('Waiting for the workflow run to be created...');
         const startTime = Date.now();
@@ -183,25 +181,30 @@ export class GithubApiManager {
                 return workflowRun;
             }
 
-            // Check if the timeoutMs has been reached
-            if (Date.now() - startTime > timeoutMs) {
+            // Check if the workflowRunCreationTimeoutMs has been reached
+            if (Date.now() - startTime > workflowRunCreationTimeoutMs) {
                 throw new Error('Timeout reached waiting for workflow run completion');
             }
 
             // Wait for the defined intervalMs then check again
-            await sleep(intervalMs);
-            return checkIfWorkflowRunCreated(); // Recurse until completion or timeoutMs
+            await sleep(POLLING_INTERVAL_MS);
+            return checkIfWorkflowRunCreated(); // Recurse until completion or workflowRunCreationTimeoutMs
         };
 
         const result = await checkIfWorkflowRunCreated();
         return result;
     }
 
+    /**
+     * Waits for a specific workflow run to complete with a workflowRunCompletionTimeoutMs.
+     * @param branch
+     * @param customWorkflowRunId
+     * @param workflowRunCompletionTimeoutMs
+     */
     async waitForWorkflowRunCompletion(
         branch: string,
         customWorkflowRunId: string,
-        timeoutMs: number = 3000000, // FIXME move to the configuration
-        intervalMs: number = 5000,
+        workflowRunCompletionTimeoutMs: number,
     ): Promise<WorkflowRun | null> {
         logger.info(`Waiting for the workflow run "${customWorkflowRunId}" in the branch "${branch}" to complete...`);
         const startTime = Date.now();
@@ -253,12 +256,12 @@ export class GithubApiManager {
             }
 
             // Check if the timeoutMs has been reached
-            if (Date.now() - startTime > timeoutMs) {
+            if (Date.now() - startTime > workflowRunCompletionTimeoutMs) {
                 throw new Error('Timeout reached waiting for workflow run completion');
             }
 
             // Wait for the defined intervalMs then check again
-            await sleep(intervalMs);
+            await sleep(POLLING_INTERVAL_MS);
             return checkIfWorkflowRunCompleted();
         };
 

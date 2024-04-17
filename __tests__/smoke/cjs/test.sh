@@ -9,7 +9,6 @@ nm_path="node_modules"
 
 # Define cleanup function
 cleanup() {
-#    FIXME uncomment
     echo "Cleaning up..."
     rm -f $github_actions_runner && rm -rf $nm_path
     echo "Cleanup complete"

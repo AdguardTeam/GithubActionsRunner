@@ -13,6 +13,20 @@ interface GitHubActionsRunnerOptions {
 }
 
 /**
+ * Fixme good description
+ */
+interface RunActionOptions {
+    branch: string;
+    workflow: string;
+    rev: string;
+    commitTimeoutMs: number;
+    branchTimeoutMs: number;
+    workflowRunCreationTimeoutMs: number;
+    workflowRunCompletionTimeoutMs: number;
+    artifactsPath?: string;
+}
+
+/**
  * FIXME good description
  */
 export class GitHubActionsRunner {
@@ -55,15 +69,9 @@ export class GitHubActionsRunner {
         artifactsPath,
         commitTimeoutMs,
         branchTimeoutMs,
-    }: {
-        // FIXME extract this type to the interfaces
-        branch: string;
-        workflow: string;
-        rev: string,
-        commitTimeoutMs: number,
-        branchTimeoutMs: number,
-        artifactsPath?: string,
-    }): Promise<void> {
+        workflowRunCreationTimeoutMs,
+        workflowRunCompletionTimeoutMs,
+    }: RunActionOptions): Promise<void> {
         logger.info(`Starting action for repository "${this.owner}/${this.repo}"`);
         logger.info(`Workflow: "${workflow}"`);
         logger.info(`Revision: "${rev}"`);
@@ -75,8 +83,16 @@ export class GitHubActionsRunner {
         await this.githubApiManager.waitForBranch(branch, branchTimeoutMs);
 
         const customWorkflowRunId = await this.githubApiManager.triggerWorkflow(workflow, branch);
-        await this.githubApiManager.waitForWorkflowRunCreation(branch, customWorkflowRunId);
-        const workflowRun = await this.githubApiManager.waitForWorkflowRunCompletion(branch, customWorkflowRunId);
+        await this.githubApiManager.waitForWorkflowRunCreation(
+            branch,
+            customWorkflowRunId,
+            workflowRunCreationTimeoutMs,
+        );
+        const workflowRun = await this.githubApiManager.waitForWorkflowRunCompletion(
+            branch,
+            customWorkflowRunId,
+            workflowRunCompletionTimeoutMs,
+        );
 
         if (!workflowRun) {
             throw new Error('Workflow run not found.');

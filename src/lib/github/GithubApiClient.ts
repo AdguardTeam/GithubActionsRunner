@@ -1,5 +1,11 @@
 import { Octokit } from 'octokit';
 import { type RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
+import { WORKFLOW_CREATED_WITHIN_MS } from '../constants';
+
+/**
+ * Number of items to fetch per page.
+ */
+const PER_PAGE = 100;
 
 /**
  * Type definition for the artifact download response.
@@ -8,6 +14,12 @@ interface ArtifactDownloadResponse {
     status: number;
     url: string;
 }
+
+/**
+ * The archive format for the artifact.
+ * Currently, only zip is supported.
+ */
+const ARCHIVE_FORMAT = 'zip';
 
 /**
  * GitHubApi class.
@@ -71,13 +83,13 @@ export class GithubApiClient {
     /**
      * Lists all workflow runs in the repository with possible query configurations.
      * @param branch The name of the branch (optional).
+     * @returns A promise that resolves to the list of workflow runs.
      */
     async listWorkflowRuns(branch?: string):
     Promise<RestEndpointMethodTypes['actions']['listWorkflowRunsForRepo']['response']> {
         const date = new Date();
-        // FIXME: move to the constants, add comment that it is choosen arbitrarily,
-        //  consider moving to the constant waitBeforeWorkflowRunStarted
-        date.setMinutes(date.getMinutes() - 1000); // FIXME replace to 5
+        date.setTime(date.getTime() - WORKFLOW_CREATED_WITHIN_MS);
+
         const createdSince = date.toISOString();
 
         const params = {
@@ -85,17 +97,10 @@ export class GithubApiClient {
             repo: this.repo,
             branch,
             created: `>=${createdSince}`,
-            per_page: 100,
+            per_page: PER_PAGE,
         };
 
-        // FIXME run this several times until workflow run id is found, or timeout
-        // If timeout, throw an error that the workflow run was not found and ask user to check if id was specified
-        // correctly
-        // FIXME also describe this in the README
-
-        // FIXME handle errors
-        const response = await this.octokit.request('GET /repos/{owner}/{repo}/actions/runs', params);
-        return response;
+        return this.octokit.request('GET /repos/{owner}/{repo}/actions/runs', params);
     }
 
     async listWorkflowArtifacts(workflowRunId: number):
@@ -104,11 +109,9 @@ export class GithubApiClient {
             owner: this.owner,
             repo: this.repo,
             run_id: workflowRunId,
-            per_page: 100, // FIXME to the constants
-            // name: 'name' // FIXME consider using name, this will list artifacts with the specific name only
-            headers: {
-                'X-GitHub-Api-Version': '2022-11-28',
-            },
+            per_page: PER_PAGE,
+            // TODO consider using name, this will list artifacts with the specific name only
+            // name: 'name'
         });
     }
 
@@ -124,7 +127,7 @@ export class GithubApiClient {
                 owner: this.owner,
                 repo: this.repo,
                 artifact_id: artifactId,
-                archive_format: 'zip', // FIXME consider moving this to constants for consistency and reusability
+                archive_format: ARCHIVE_FORMAT,
             },
         ) as ArtifactDownloadResponse;
     }
