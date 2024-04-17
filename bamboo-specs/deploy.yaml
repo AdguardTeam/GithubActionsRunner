@@ -10,9 +10,6 @@ environments:
 npmjs:
   docker:
     image: adguard/node-ssh:18.19--0
-    volumes:
-#      FIXME
-      ${system.YARN_DIR}: "${bamboo.cacheYarn}"
   triggers: [ ]
   tasks:
     - checkout:
