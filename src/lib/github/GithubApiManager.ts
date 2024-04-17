@@ -1,15 +1,19 @@
 import { nanoid } from 'nanoid';
 import axios, { HttpStatusCode } from 'axios';
 import path from 'path';
-import { promises as fsPromises } from 'fs';
-import { ensureDir } from 'fs-extra';
 import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
+import { pipeline } from 'stream';
+import { promisify } from 'util';
+import * as unzipper from 'unzipper';
+import { ensureDir } from 'fs-extra';
 
 import { sleep } from '../utils/time';
 import { isErrorWithStatus } from '../utils/errors';
 import { type GithubApiClient } from './GithubApiClient';
 import { logger } from '../utils/logger';
-import { POLLING_INTERVAL_MS } from '../constants';
+import { ARTIFACTS_MAX_DOWNLOAD_SIZE_BYTES, POLLING_INTERVAL_MS } from '../constants';
+
+const pipelinePromise = promisify(pipeline);
 
 type WorkflowRuns = RestEndpointMethodTypes['actions']['listWorkflowRunsForRepo']['response']['data']['workflow_runs'];
 export type WorkflowRun = WorkflowRuns[number];
@@ -49,22 +53,22 @@ export class GithubApiManager {
         commitRef: string,
         waitForCommitTimeoutMs: number,
     ): Promise<void> {
-        logger.info(`Waiting for commit ${commitRef}...`);
+        logger.info(`Waiting for commit "${commitRef}" ...`);
         const startTime = Date.now();
 
         const tryFetchCommit = async (): Promise<void> => {
             const exists = await this.hasCommit(commitRef);
             if (exists) {
-                logger.info(`Commit ${commitRef} found.`);
+                logger.info(`Commit "${commitRef}" found.`);
                 return;
             }
 
             if (Date.now() - startTime > waitForCommitTimeoutMs) {
-                throw new Error(`Timeout waiting for commit ${commitRef}.`);
+                throw new Error(`Timeout waiting for commit "${commitRef}".`);
             }
 
             logger.debug(
-                `Commit ${commitRef} not found. Retrying in ${POLLING_INTERVAL_MS / 1000} seconds...`,
+                `Commit "${commitRef}" not found. Retrying in ${POLLING_INTERVAL_MS / 1000} seconds...`,
             );
 
             await sleep(POLLING_INTERVAL_MS);
@@ -240,7 +244,6 @@ export class GithubApiManager {
             pending: string;
         }
 
-        // FIXME same method is used in the waitForWorkflowRunCreation, extract it to avoid duplication
         const checkIfWorkflowRunCompleted = async (): Promise<WorkflowRun | null> => {
             const workflowRun = await this.getWorkflowRun(branch, customWorkflowRunId);
             if (workflowRun) {
@@ -271,36 +274,39 @@ export class GithubApiManager {
     }
 
     /**
-     * Downloads an artifact from a given URL and saves it to a specified path using axios.
+     * Downloads an artifact from a given URL, saves it to a specified path, and unzips it using axios,
+     * while ensuring the download size does not exceed the specified ARTIFACTS_MAX_DOWNLOAD_SIZE_BYTES.
      * @param artifact
      * @param artifactsPath
      */
-    // eslint-disable-next-line class-methods-use-this
-    async downloadArtifactToPath(artifact: Artifact, artifactsPath: string): Promise<void> { // FIXME rename
+    async downloadArtifactToPath(artifact: Artifact, artifactsPath: string): Promise<void> {
         try {
             const url = await this.getDownloadUrl(artifact.id);
-            const response = await axios.get(url, {
-                responseType: 'arraybuffer',
-                // FIXME Ensure you handle large files correctly:
-                maxContentLength: Infinity,
+
+            const response = await axios({
+                method: 'GET',
+                url,
+                responseType: 'stream',
+                maxContentLength: ARTIFACTS_MAX_DOWNLOAD_SIZE_BYTES,
             });
 
             if (response.status !== HttpStatusCode.Ok) {
                 throw new Error(`Failed to download file: ${response.statusText}`);
             }
 
-            const dirPath = path.resolve(__dirname, artifactsPath);
-            // Write the downloaded data to a file
-            const fullPath = path.resolve(
-                dirPath,
-                `${artifact.name}.zip`, // FIXME extract extension to the constant
-            );
+            // Prepare the path for the artifacts
+            const dirPath = path.resolve(process.cwd(), artifactsPath);
             await ensureDir(dirPath);
-            // FIXME unzip file
-            await fsPromises.writeFile(fullPath, response.data);
-            logger.info(`Artifact downloaded to: ${fullPath}`);
+
+            // Pipe streaming data to zip extraction
+            await pipelinePromise(
+                response.data,
+                unzipper.Extract({ path: dirPath }),
+            );
+
+            logger.info(`Artifact saved to: ${dirPath}/${artifact.name}`);
         } catch (error) {
-            throw new Error(`Error downloading or writing file: ${error}`);
+            throw new Error(`Error downloading or extracting file: ${error}`);
         }
     }
 
