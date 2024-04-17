@@ -136,7 +136,7 @@ export class GithubApiClient {
      * Gets a workflow run based on its id.
      *
      * @param workflowRunId The id of the workflow run.
-     * @returns A promise that resolves to the workflow run.
+     * @returns A promise that resolves to the workflow run artefacts list.
      */
     async listWorkflowArtifacts(workflowRunId: number):
     Promise<RestEndpointMethodTypes['actions']['listWorkflowRunArtifacts']['response']> {
@@ -151,12 +151,13 @@ export class GithubApiClient {
     }
 
     /**
-     * Downloads an artifact and returns the direct download URL.
+     * Gets the download URL for a specific artifact.
+     * The download URL is valid for 1 minute.
      *
-     * @param artifactId The unique identifier of the artifact.
-     * @returns A Promise resolving to the direct download URL of the artifact.
+     * @param artifactId The id of the artifact.
+     * @returns A promise that resolves to the download URL.
      */
-    async downloadArtifact(artifactId: number): Promise<ArtifactDownloadResponse> {
+    async getArtifactDownloadUrl(artifactId: number): Promise<ArtifactDownloadResponse> {
         return await this.octokit.request(
             'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}',
             {

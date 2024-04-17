@@ -20,17 +20,58 @@ export type WorkflowRun = WorkflowRuns[number];
 type Artifacts = RestEndpointMethodTypes['actions']['listWorkflowRunArtifacts']['response']['data']['artifacts'];
 export type Artifact = Artifacts[number];
 
+/**
+ * Statuses for a workflow run, indicating state of the workflow in the progress.
+ */
+interface Statuses {
+    /**
+     * The workflow is currently running.
+     */
+    in_progress: string;
+
+    /**
+     * The workflow is waiting in the queue for resources to become available.
+     */
+    queued: string;
+
+    /**
+     * The workflow has been requested but has not yet started.
+     */
+    requested: string;
+
+    /**
+     * The workflow is on hold, waiting for an external condition or manual intervention.
+     */
+    waiting: string;
+
+    /**
+     * The workflow has begun initial processing but is not yet fully active.
+     */
+    pending: string;
+}
+
+/**
+ * GithubApiManager class.
+ * This class is responsible for managing the interactions with the GitHub API.
+ */
 export class GithubApiManager {
     private readonly githubApiClient: GithubApiClient;
 
+    /**
+     * Constructor.
+     * Initializes a new instance of the GithubApiManager with the specified GitHub API client.
+     *
+     * @param apiClient The GitHub API client.
+     */
     constructor(apiClient: GithubApiClient) {
         this.githubApiClient = apiClient;
     }
 
     /**
-     /**
-     * Checks if a commit exists based on its reference.
-     * @param commitRef The reference for the commit.
+     * Checks if a commit exists.
+     * @param commitRef The reference for the commit to check (SHA).
+     * @returns A boolean indicating if the commit exists.
+     * @throws An error if the commit check fails.
      */
     async hasCommit(commitRef: string): Promise<boolean> {
         try {
@@ -45,9 +86,11 @@ export class GithubApiManager {
     }
 
     /**
-     * Waits for a commit to exist in the repository.
-     * @param commitRef The reference for the commit to wait for (SHA, branch name, or tag name).
-     * @param waitForCommitTimeoutMs The maximum time to wait for the commit to appear in repository in milliseconds.
+     * Waits for a commit to exist.
+     *
+     * @param commitRef The reference for the commit to wait for (SHA).
+     * @param waitForCommitTimeoutMs The maximum time to wait in milliseconds.
+     * @throws An error if the commit does not exist within the timeout.
      */
     async waitForCommit(
         commitRef: string,
@@ -80,7 +123,10 @@ export class GithubApiManager {
 
     /**
      * Checks if a branch exists.
-     * @param branch The name of the branch.
+     *
+     * @param branch The name of the branch to check.
+     * @returns A boolean indicating if the branch exists.
+     * @throws An error if the branch check fails.
      */
     async hasBranch(branch: string): Promise<boolean> {
         try {
@@ -97,7 +143,8 @@ export class GithubApiManager {
     /**
      * Waits for a branch to exist.
      * @param branchName The name of the branch to wait for.
-     * @param waitForBranchTimeoutMs
+     * @param waitForBranchTimeoutMs The maximum time to wait in milliseconds.
+     * @throws An error if the branch does not exist within the timeout.
      */
     async waitForBranch(
         branchName: string,
@@ -129,10 +176,12 @@ export class GithubApiManager {
     }
 
     /**
-     * Triggers a workflow and returns the custom id of the workflow run.
-     * @param workflow
-     * @param branch
-     * @returns The custom id of the workflow run.
+     * Triggers a workflow on a branch.
+     *
+     * @param workflow The name of the workflow to trigger.
+     * @param branch The name of the branch to trigger the workflow on.
+     * @returns The custom ID of the workflow run.
+     * @throws An error if the workflow trigger fails.
      */
     async triggerWorkflow(workflow: string, branch: string): Promise<string> {
         logger.info(`Triggering workflow "${workflow}" on branch "${branch}"...`);
@@ -149,6 +198,14 @@ export class GithubApiManager {
         return workflowRunCustomId;
     }
 
+    /**
+     * Gets a workflow run based on its custom ID.
+     *
+     * @param branch The branch for the workflow run.
+     * @param customWorkflowRunId The ID of the workflow run.
+     * @returns The workflow run if found, otherwise null.
+     * @throws An error if the workflow run retrieval fails.
+     */
     async getWorkflowRun(branch: string, customWorkflowRunId: string): Promise<WorkflowRun | null> {
         const workflowRunsResponse = await this.githubApiClient.listWorkflowRuns(branch);
         if (!workflowRunsResponse || !workflowRunsResponse.data || !workflowRunsResponse.data.workflow_runs) {
@@ -165,10 +222,13 @@ export class GithubApiManager {
     }
 
     /**
-     * Waits for a specific workflow run to complete with a workflowRunCreationTimeoutMs.
+     * Waits for a specific workflow run to be created with a workflowRunCreationTimeoutMs.
+     *
      * @param branch The branch for the workflow run.
      * @param customWorkflowRunId The ID of the workflow run.
      * @param workflowRunCreationTimeoutMs The maximum time to wait in milliseconds.
+     * @returns The workflow run if found, otherwise null.
+     * @throws An error if the workflow run creation fails.
      */
     async waitForWorkflowRunCreation(
         branch: string,
@@ -201,9 +261,12 @@ export class GithubApiManager {
 
     /**
      * Waits for a specific workflow run to complete with a workflowRunCompletionTimeoutMs.
-     * @param branch
-     * @param customWorkflowRunId
-     * @param workflowRunCompletionTimeoutMs
+     *
+     * @param branch The branch for the workflow run.
+     * @param customWorkflowRunId The ID of the workflow run.
+     * @param workflowRunCompletionTimeoutMs The maximum time to wait workflow run completion in milliseconds.
+     * @returns The workflow run if found, otherwise null.
+     * @throws An error if the workflow run completion fails.
      */
     async waitForWorkflowRunCompletion(
         branch: string,
@@ -213,6 +276,9 @@ export class GithubApiManager {
         logger.info(`Waiting for the workflow run "${customWorkflowRunId}" in the branch "${branch}" to complete...`);
         const startTime = Date.now();
 
+        /**
+         * Statuses for a workflow run, indicating state of the workflow in the progress.
+         */
         const IN_PROGRESS_STATUSES: Statuses = {
             /**
              * The workflow is currently running.
@@ -235,14 +301,6 @@ export class GithubApiManager {
              */
             pending: 'pending',
         };
-
-        interface Statuses {
-            in_progress: string;
-            queued: string;
-            requested: string;
-            waiting: string;
-            pending: string;
-        }
 
         const checkIfWorkflowRunCompleted = async (): Promise<WorkflowRun | null> => {
             const workflowRun = await this.getWorkflowRun(branch, customWorkflowRunId);
@@ -276,8 +334,10 @@ export class GithubApiManager {
     /**
      * Downloads an artifact from a given URL, saves it to a specified path, and unzips it using axios,
      * while ensuring the download size does not exceed the specified ARTIFACTS_MAX_DOWNLOAD_SIZE_BYTES.
-     * @param artifact
-     * @param artifactsPath
+     * @param artifact The artifact to download.
+     * @param artifactsPath The path to save the downloaded artifact.
+     * @returns A promise that resolves when the download and extraction are complete.
+     * @throws An error if the download or extraction fails.
      */
     async downloadArtifactToPath(artifact: Artifact, artifactsPath: string): Promise<void> {
         try {
@@ -310,6 +370,12 @@ export class GithubApiManager {
         }
     }
 
+    /**
+     * Lists all artifacts for a given workflow run.
+     * @param workflowRunId The ID of the workflow run.
+     * @returns A promise that resolves to the list of artifacts.
+     * @throws An error if the artifact listing fails.
+     */
     async listWorkflowArtifacts(workflowRunId: number): Promise<Artifacts> {
         try {
             const response = await this.githubApiClient.listWorkflowArtifacts(workflowRunId);
@@ -323,11 +389,13 @@ export class GithubApiManager {
 
     /**
      * Returns artifact download url.
-     * @param artifactId
+     * @param artifactId The ID of the artifact.
+     * @returns A promise that resolves to the download URL of the artifact.
+     * @throws An error if the download URL retrieval fails.
      */
     async getDownloadUrl(artifactId: number): Promise<string> {
         try {
-            const response = await this.githubApiClient.downloadArtifact(artifactId);
+            const response = await this.githubApiClient.getArtifactDownloadUrl(artifactId);
             if (response.status === HttpStatusCode.Ok && response.url) {
                 return response.url;
             }
