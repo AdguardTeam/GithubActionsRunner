@@ -14,7 +14,7 @@ module.exports = {
     extends: [
         'airbnb-base',
         'airbnb-typescript/base',
-        'plugin:jsdoc/recommended', // FIXME uncomment later
+        'plugin:jsdoc/recommended',
     ],
     ignorePatterns: [
         'dist',

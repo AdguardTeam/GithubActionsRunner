@@ -334,6 +334,7 @@ export class GithubApiManager {
     /**
      * Downloads an artifact from a given URL, saves it to a specified path, and unzips it using axios,
      * while ensuring the download size does not exceed the specified ARTIFACTS_MAX_DOWNLOAD_SIZE_BYTES.
+     *
      * @param artifact The artifact to download.
      * @param artifactsPath The path to save the downloaded artifact.
      * @returns A promise that resolves when the download and extraction are complete.
@@ -341,7 +342,7 @@ export class GithubApiManager {
      */
     async downloadArtifactToPath(artifact: Artifact, artifactsPath: string): Promise<void> {
         try {
-            const url = await this.getDownloadUrl(artifact.id);
+            const url = await this.getArtifactDownloadUrl(artifact.id);
 
             const response = await axios({
                 method: 'GET',
@@ -372,6 +373,7 @@ export class GithubApiManager {
 
     /**
      * Lists all artifacts for a given workflow run.
+     *
      * @param workflowRunId The ID of the workflow run.
      * @returns A promise that resolves to the list of artifacts.
      * @throws An error if the artifact listing fails.
@@ -389,11 +391,12 @@ export class GithubApiManager {
 
     /**
      * Returns artifact download url.
+     *
      * @param artifactId The ID of the artifact.
      * @returns A promise that resolves to the download URL of the artifact.
      * @throws An error if the download URL retrieval fails.
      */
-    async getDownloadUrl(artifactId: number): Promise<string> {
+    async getArtifactDownloadUrl(artifactId: number): Promise<string> {
         try {
             const response = await this.githubApiClient.getArtifactDownloadUrl(artifactId);
             if (response.status === HttpStatusCode.Ok && response.url) {
@@ -405,6 +408,14 @@ export class GithubApiManager {
         }
     }
 
+    /**
+     * Downloads all artifacts from a given workflow run and saves them to a specified path.
+     *
+     * @param workflowRun The workflow run to download artifacts from.
+     * @param artifactsPath The path to save the downloaded artifacts.
+     * @returns A promise that resolves when all artifacts are downloaded.
+     * @throws An error if the download fails.
+     */
     async downloadArtifacts(workflowRun: WorkflowRun, artifactsPath: string): Promise<void> {
         logger.info('Downloading artifacts...');
         const artifactsList = await this.listWorkflowArtifacts(workflowRun.id);
