@@ -5,6 +5,7 @@
         "rollup.config.ts",
         ".eslintrc.js",
         "jest.config.ts",
-        "src"
+        "src",
+        "scripts"
     ]
 }

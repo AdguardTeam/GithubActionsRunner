@@ -18,8 +18,7 @@ module.exports = {
     ],
     ignorePatterns: [
         'dist',
-        'coverage',
-        'tests/smoke',
+        '__tests__/smoke',
     ],
     rules: {
         indent: 'off',

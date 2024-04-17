@@ -2,15 +2,33 @@
     "name": "@adguard/github-actions-runner",
     "version": "1.0.0",
     "description": "A GitHub Action runner tool to automate repository mirroring, streamline command execution, and manage artifacts with enhanced logging.",
-    "main": "index.js",
     "scripts": {
+        "prepack": "pnpm build",
         "watch": "rollup -c rollup.config.ts --configPlugin typescript --watch",
-        "build": "rimraf dist && rollup -c rollup.config.ts --configPlugin typescript",
-        "test": "jest",
-        "lint": "eslint --cache . && tsc -p tsconfig.eslint.json --noEmit"
+        "build": "rimraf dist && rollup -c rollup.config.ts --configPlugin typescript && pnpm build:types",
+        "test": "pnpm run test:smoke",
+        "lint": "eslint --cache . && tsc -p tsconfig.eslint.json --noEmit",
+        "build:types": "tsc --project tsconfig.json --declaration --emitDeclarationOnly --outdir dist/types --rootDir src",
+        "build:txt": "ts-node scripts/build-txt",
+        "increment": "pnpm version patch --no-git-tag-version",
+        "test:smoke": "(cd __tests__/smoke/esm && pnpm test) && (cd __tests__/smoke/cjs && pnpm test) && (cd __tests__/smoke/typescript && pnpm test)"
     },
     "bin": {
         "actions-runner": "dist/bin/index.js"
+    },
+    "main": "./dist/index.js",
+    "module": "./dist/es/index.mjs",
+    "types": "./dist/types/index.d.ts",
+    "files": [
+        "dist",
+        "src"
+    ],
+    "exports": {
+        ".": {
+            "require": "./dist/index.js",
+            "import": "./dist/es/index.mjs",
+            "types": "./dist/types/index.d.ts"
+        }
     },
     "keywords": [
         "adguard",
