@@ -24,10 +24,9 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/AdguardTeam/tsurlfilter.git",
-        "directory": "packages/github-actions-runner"
+        "url": "git+https://github.com/AdguardTeam/GithubActionsRunner.git"
     },
-    "homepage": "https://github.com/AdguardTeam/tsurlfilter/tree/master/packages/github-actions-runner#readme",
+    "homepage": "https://github.com/AdguardTeam/GithubActionsRunner/#readme",
     "engines": {
         "node": ">=18.19.1"
     },

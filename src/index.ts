@@ -1,9 +1,7 @@
 // FIXME:
-// - README.md
-// - CI/CD
-// - timeout for the action
+// - bamboo specs
 // - github workflow
 // - docker image
-// - add verbose flag and logger, which will log the requests and responses
+// - test package is working
 
 export { GitHubActionsRunner } from './lib/GitHubActionsRunner';

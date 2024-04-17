@@ -1,0 +1,75 @@
+---
+version: 2
+plan:
+  project-key: AJL
+  key: GHACTIONSRUNTESTS
+  name: github-actions-runner - tests
+variables:
+  dockerNode: adguard/node-ssh:18.19--0
+
+stages:
+  - Test:
+      manual: false
+      final: false
+      jobs:
+        - Test
+
+Test:
+  key: TEST
+  other:
+    clean-working-dir: true
+  docker:
+    image: ${bamboo.dockerNode}
+    volumes:
+       ${system.PNPM_DIR}: "${bamboo.cachePnpm}"
+  tasks:
+    - checkout:
+        force-clean-build: true
+    - script:
+        interpreter: SHELL
+        scripts:
+          - |-
+            set -x
+            set -e
+
+            # Fix mixed logs
+            exec 2>&1
+
+            ls -laht
+
+            # Set cache directory
+            pnpm config set store-dir ${bamboo.cachePnpm}
+
+            pnpm install
+            pnpm lint
+            pnpm test
+  final-tasks:
+    - script:
+        interpreter: SHELL
+        scripts:
+          - |-
+            set -x
+            set -e
+
+            # Fix mixed logs
+            exec 2>&1
+
+            ls -laht
+
+            echo "Size before cleanup:" && du -h | tail -n 1
+            rm -rf node_modules
+            echo "Size after cleanup:" && du -h | tail -n 1
+  requirements:
+    - adg-docker: true
+
+branches:
+  create: for-pull-request
+  delete:
+    after-deleted-days: '1'
+    after-inactive-days: '5'
+  link-to-jira: true
+
+notifications: []
+labels: []
+other:
+  concurrent-build-plugin: system-default
