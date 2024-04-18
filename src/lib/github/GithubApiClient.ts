@@ -8,9 +8,9 @@ import { WORKFLOW_CREATED_WITHIN_MS } from '../constants';
 const PER_PAGE = 100;
 
 /**
- * Type definition for the artifact download response.
+ * ResponseWithDownloadUrl interface.
  */
-interface ArtifactDownloadResponse {
+interface ResponseWithDownloadUrl {
     status: number;
     url: string;
 }
@@ -157,7 +157,7 @@ export class GithubApiClient {
      * @param artifactId The id of the artifact.
      * @returns A promise that resolves to the download URL.
      */
-    async getArtifactDownloadUrl(artifactId: number): Promise<ArtifactDownloadResponse> {
+    async getArtifactDownloadUrl(artifactId: number): Promise<ResponseWithDownloadUrl> {
         return await this.octokit.request(
             'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}',
             {
@@ -166,6 +166,20 @@ export class GithubApiClient {
                 artifact_id: artifactId,
                 archive_format: ARCHIVE_FORMAT,
             },
-        ) as ArtifactDownloadResponse;
+        ) as ResponseWithDownloadUrl;
+    }
+
+    /**
+     * Gets the logs download url for a specific workflow run.
+     * The download URL is valid for 1 minute.
+     * @param workflowRunId The id of the workflow run.
+     * @returns A promise that resolves to the object with download URL and status.
+     */
+    async getWorkflowRunLogsUrl(workflowRunId: number): Promise<ResponseWithDownloadUrl> {
+        return await this.octokit.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}/logs', {
+            owner: this.owner,
+            repo: this.repo,
+            run_id: workflowRunId,
+        }) as ResponseWithDownloadUrl;
     }
 }

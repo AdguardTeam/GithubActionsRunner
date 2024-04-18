@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import axios, { HttpStatusCode } from 'axios';
 import path from 'path';
 import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
-import { pipeline } from 'stream';
+import { pipeline, Writable } from 'stream';
 import { promisify } from 'util';
 import * as unzipper from 'unzipper';
 import { ensureDir } from 'fs-extra';
@@ -241,7 +241,7 @@ export class GithubApiManager {
         const checkIfWorkflowRunCreated = async (): Promise<WorkflowRun | null> => {
             const workflowRun = await this.getWorkflowRun(branch, customWorkflowRunId);
             if (workflowRun) {
-                logger.info(`Workflow run found: ${workflowRun.name}`);
+                logger.info(`Workflow run found: "${workflowRun.name}"`);
                 return workflowRun;
             }
 
@@ -424,5 +424,61 @@ export class GithubApiManager {
         await Promise.all(artifactsList.map((artifact) => {
             return this.downloadArtifactToPath(artifact, artifactsPath);
         }));
+    }
+
+    /**
+     * Fetches the logs for a given workflow run.
+     * The logs are fetched from the GitHub API and returned as a string.
+     * @param workflowRunId The ID of the workflow run.
+     * @returns A promise that resolves to the logs for the workflow run.
+     */
+    async fetchWorkflowRunLogs(workflowRunId: number): Promise<string> {
+        /**
+         * In the archive with logs there are several files, separated by jobs,
+         * but we are interested in the whole log, which is in the file with the name "0_<job_name>.txt".
+         */
+        const WHOLE_LOG_PATH_BEGINNING = '0_';
+        const LOG_EXTENSION = '.txt';
+
+        const logContent: string[] = [];
+
+        try {
+            // Fetch the URL for the workflow logs.
+            const response = await this.githubApiClient.getWorkflowRunLogsUrl(workflowRunId);
+            if (!response || !response.url) {
+                throw new Error(`Unable to retrieve log URL or URL is undefined for workflowRunId: ${workflowRunId}`);
+            }
+
+            const { data: logsStream } = await axios.get(
+                response.url,
+                { responseType: 'stream' },
+            );
+
+            // Using a stream pipeline to process the stream and print the log data.
+            await pipelinePromise(
+                logsStream,
+                unzipper.Parse(),
+                new Writable({
+                    objectMode: true,
+                    async write(entry, encoding, callback): Promise<void> {
+                        if (entry.path.startsWith(WHOLE_LOG_PATH_BEGINNING) && entry.path.endsWith(LOG_EXTENSION)) {
+                            for await (const chunk of entry) {
+                                logContent.push(chunk);
+                            }
+                            callback();
+                        } else {
+                            // Skip non-required files.
+                            entry.autodrain().on('finish', callback);
+                        }
+                    },
+                }),
+            );
+            return `\n
+            ----GITHUB WORKFLOW RUN LOGS START----\n
+${logContent.join('')}
+            ----GITHUB WORKFLOW RUN LOGS END----\n`;
+        } catch (e) {
+            throw new Error(`Failed to fetch logs: ${e}`);
+        }
     }
 }

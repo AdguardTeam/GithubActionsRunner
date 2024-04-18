@@ -155,11 +155,18 @@ export class GitHubActionsRunner {
         await this.githubApiManager.waitForBranch(branch, branchTimeoutMs);
 
         const customWorkflowRunId = await this.githubApiManager.triggerWorkflow(workflow, branch);
-        await this.githubApiManager.waitForWorkflowRunCreation(
+        const workflowRunInfo = await this.githubApiManager.waitForWorkflowRunCreation(
             branch,
             customWorkflowRunId,
             workflowRunCreationTimeoutMs,
         );
+
+        if (!workflowRunInfo) {
+            throw new Error('Workflow run not found.');
+        }
+
+        logger.info(`Link to workflow run: "${workflowRunInfo.html_url}"`);
+
         const workflowRun = await this.githubApiManager.waitForWorkflowRunCompletion(
             branch,
             customWorkflowRunId,
@@ -169,6 +176,9 @@ export class GitHubActionsRunner {
         if (!workflowRun) {
             throw new Error('Workflow run not found.');
         }
+
+        const logs = await this.githubApiManager.fetchWorkflowRunLogs(workflowRun.id);
+        logger.info(logs);
 
         if (artifactsPath) {
             await this.githubApiManager.downloadArtifacts(workflowRun, artifactsPath);
