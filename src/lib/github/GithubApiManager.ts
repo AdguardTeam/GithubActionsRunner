@@ -247,7 +247,7 @@ export class GithubApiManager {
 
             // Check if the workflowRunCreationTimeoutMs has been reached
             if (Date.now() - startTime > workflowRunCreationTimeoutMs) {
-                throw new Error('Timeout reached waiting for workflow run completion');
+                throw new Error('Timeout reached waiting for workflow run creation');
             }
 
             // Wait for the defined intervalMs then check again
@@ -257,6 +257,26 @@ export class GithubApiManager {
 
         const result = await checkIfWorkflowRunCreated();
         return result;
+    }
+
+    /**
+     * Logs how much time has passed since the workflow run started.
+     * @param workflowRun The workflow run info to log the time for.
+     */
+    private static logHowMuchTimePassed(workflowRun: WorkflowRun): void {
+        if (!workflowRun.run_started_at) {
+            // impossible here, since we log after workflow run has started
+            logger.error(`Workflow run has not started yet, status: ${workflowRun.status}}`);
+            return;
+        }
+
+        const startedAt = workflowRun.run_started_at;
+        const currentTime = new Date();
+        const workflowStartTime = new Date(startedAt);
+        const durationSeconds = Math.floor((currentTime.getTime() - workflowStartTime.getTime()) / 1000);
+
+        // Log the time the build has been running and its current status
+        logger.info(`Build is running for: ${durationSeconds} seconds, current status is: "${workflowRun.status}"`);
     }
 
     /**
@@ -305,6 +325,8 @@ export class GithubApiManager {
         const checkIfWorkflowRunCompleted = async (): Promise<WorkflowRun | null> => {
             const workflowRun = await this.getWorkflowRun(branch, customWorkflowRunId);
             if (workflowRun) {
+                GithubApiManager.logHowMuchTimePassed(workflowRun);
+
                 if (workflowRun.status) {
                     if (!IN_PROGRESS_STATUSES[workflowRun.status as keyof Statuses]) {
                         logger.info(`Workflow run completed with status: "${workflowRun.status}"`);
@@ -316,12 +338,12 @@ export class GithubApiManager {
                 }
             }
 
-            // Check if the timeoutMs has been reached
+            // Check if the workflowRunCompletionTimeoutMs has been reached
             if (Date.now() - startTime > workflowRunCompletionTimeoutMs) {
                 throw new Error('Timeout reached waiting for workflow run completion');
             }
 
-            // Wait for the defined intervalMs then check again
+            // Wait for the defined interval and then check again
             await sleep(POLLING_INTERVAL_MS);
             return checkIfWorkflowRunCompleted();
         };
