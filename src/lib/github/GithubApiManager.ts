@@ -16,9 +16,9 @@ import { ARTIFACTS_MAX_DOWNLOAD_SIZE_BYTES, POLLING_INTERVAL_MS } from '../const
 const pipelinePromise = promisify(pipeline);
 
 type WorkflowRuns = RestEndpointMethodTypes['actions']['listWorkflowRunsForRepo']['response']['data']['workflow_runs'];
-export type WorkflowRun = WorkflowRuns[number];
+type WorkflowRun = WorkflowRuns[number];
 type Artifacts = RestEndpointMethodTypes['actions']['listWorkflowRunArtifacts']['response']['data']['artifacts'];
-export type Artifact = Artifacts[number];
+type Artifact = Artifacts[number];
 
 /**
  * Statuses for a workflow run, indicating state of the workflow in the progress.
@@ -55,6 +55,10 @@ interface Statuses {
  * This class is responsible for managing the interactions with the GitHub API.
  */
 export class GithubApiManager {
+    /**
+     * The GitHub API client instance.
+     * @private
+     */
     private readonly githubApiClient: GithubApiClient;
 
     /**
@@ -165,7 +169,7 @@ export class GithubApiManager {
             }
 
             logger.debug(
-                `Branch "${branchName}" not found. 
+                `Branch "${branchName}" not found.
                 Retrying in "${POLLING_INTERVAL_MS / 1000}" seconds...`,
             );
             await sleep(POLLING_INTERVAL_MS);
@@ -188,7 +192,7 @@ export class GithubApiManager {
 
         const workflowRunCustomId = nanoid();
 
-        logger.debug('Generated custom id for the workflow run:', workflowRunCustomId);
+        logger.debug(`Generated custom id for the workflow run: ${workflowRunCustomId}`);
 
         const response = await this.githubApiClient.createDispatchEvent(workflow, branch, workflowRunCustomId);
         if (response.status !== HttpStatusCode.NoContent) {
@@ -238,6 +242,11 @@ export class GithubApiManager {
         logger.info('Waiting for the workflow run to be created...');
         const startTime = Date.now();
 
+        /**
+         * Checks if the workflow run has been created.
+         * It will keep checking until the workflow run is found or the timeout is reached calling itself recursively.
+         * @returns The workflow run if found, otherwise null.
+         */
         const checkIfWorkflowRunCreated = async (): Promise<WorkflowRun | null> => {
             const workflowRun = await this.getWorkflowRun(branch, customWorkflowRunId);
             if (workflowRun) {

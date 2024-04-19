@@ -7,17 +7,20 @@ import { logger, setLoggerLevel } from './utils/logger';
  */
 interface GitHubActionsRunnerOptions {
     /**
-     * GitHub authentication token.
+     * GitHub's authentication token.
      */
     token: string;
+
     /**
      * Repository owner.
      */
     owner: string;
+
     /**
      * Repository name.
      */
     repo: string;
+
     /**
      * Verbose mode.
      */

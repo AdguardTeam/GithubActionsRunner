@@ -28,7 +28,7 @@ program.command('run-action')
     )
     .requiredOption('-w, --workflow <workflow>', 'workflow file to trigger, e.g., "test.yml"')
     .requiredOption('-b, --branch <branch>', 'branch name')
-    .requiredOption('-v, --rev <revision>', 'commit revision')
+    .requiredOption('-c, --rev <revision>', 'commit revision')
     .option(
         '-a, --artifacts-path [artifacts-path]',
         'local path for downloading artifacts; if not specified, artifacts will not be downloaded',
@@ -77,7 +77,7 @@ program.command('run-action')
             )
             .argParser((value) => parseInt(value, 10) * 1000),
     )
-    .option('-i, --verbose', 'enable verbose mode', false)
+    .option('-v, --verbose', 'enable verbose mode', false)
     .action(async (options) => {
         const {
             repo,
@@ -91,12 +91,13 @@ program.command('run-action')
             workflowRunCreationTimeout,
             workflowRunCompletionTimeout,
         } = options;
-        const [owner, repoName] = repo.split('/');
         const token = process.env.GITHUB_TOKEN;
         if (!token) {
             logger.error('The <GITHUB_TOKEN> environment variable is required.');
             process.exit(1);
         }
+
+        const [owner, repoName] = repo.split('/');
 
         const runner = new GitHubActionsRunner({
             token,
