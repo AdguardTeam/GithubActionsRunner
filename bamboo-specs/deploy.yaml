@@ -1,0 +1,43 @@
+---
+version: 2
+deployment:
+  name: github-actions-runner - deploy
+  source-plan: AJL-GHACTIONSRUNBUILD
+release-naming: ${bamboo.inject.version}
+environments:
+  - npmjs
+
+npmjs:
+  docker:
+    image: adguard/node-ssh:18.19--0
+  triggers: [ ]
+  tasks:
+    - checkout:
+        force-clean-build: 'true'
+    - artifact-download:
+        artifacts:
+          - name: github-actions-runner.tgz
+    - script:
+        interpreter: SHELL
+        scripts:
+          - |-
+            set -e
+            set -x
+
+            # Fix mixed logs
+            exec 2>&1
+
+            ls -laht
+
+            export NPM_TOKEN=${bamboo.npmSecretToken}
+            echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+            npm publish github-actions-runner.tgz --access public
+  requirements:
+    - adg-docker: 'true'
+  notifications:
+    - events:
+        - deployment-started-and-finished
+      recipients:
+        - webhook:
+            name: Deploy webhook
+            url: http://prod.jirahub.service.eu.consul/v1/webhook/bamboo
