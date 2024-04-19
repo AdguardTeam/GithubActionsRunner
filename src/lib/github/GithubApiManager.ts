@@ -504,10 +504,11 @@ export class GithubApiManager {
                     },
                 }),
             );
-            return `\n
-            ----GITHUB WORKFLOW RUN LOGS START----\n
-${logContent.join('')}
-            ----GITHUB WORKFLOW RUN LOGS END----\n`;
+            return [
+                '\n----GITHUB WORKFLOW RUN LOGS START----\n',
+                logContent.join(''),
+                '----GITHUB WORKFLOW RUN LOGS END----\n',
+            ].join('');
         } catch (e) {
             throw new Error(`Failed to fetch logs: ${e}`);
         }
