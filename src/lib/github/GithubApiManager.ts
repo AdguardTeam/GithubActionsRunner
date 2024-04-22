@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import axios, { HttpStatusCode } from 'axios';
 import path from 'path';
 import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
-import { pipeline } from 'stream';
+import { pipeline, Writable } from 'stream';
 import { promisify } from 'util';
 import * as unzipper from 'unzipper';
 import { ensureDir } from 'fs-extra';
@@ -250,13 +250,13 @@ export class GithubApiManager {
         const checkIfWorkflowRunCreated = async (): Promise<WorkflowRun | null> => {
             const workflowRun = await this.getWorkflowRun(branch, customWorkflowRunId);
             if (workflowRun) {
-                logger.info(`Workflow run found: ${workflowRun.name}`);
+                logger.info(`Workflow run found: "${workflowRun.name}"`);
                 return workflowRun;
             }
 
             // Check if the workflowRunCreationTimeoutMs has been reached
             if (Date.now() - startTime > workflowRunCreationTimeoutMs) {
-                throw new Error('Timeout reached waiting for workflow run completion');
+                throw new Error('Timeout reached waiting for workflow run creation');
             }
 
             // Wait for the defined intervalMs then check again
@@ -266,6 +266,26 @@ export class GithubApiManager {
 
         const result = await checkIfWorkflowRunCreated();
         return result;
+    }
+
+    /**
+     * Logs how much time has passed since the workflow run started.
+     * @param workflowRun The workflow run info to log the time for.
+     */
+    private static logHowMuchTimePassed(workflowRun: WorkflowRun): void {
+        if (!workflowRun.run_started_at) {
+            // impossible here, since we log after workflow run has started
+            logger.error(`Workflow run has not started yet, status: ${workflowRun.status}}`);
+            return;
+        }
+
+        const startedAt = workflowRun.run_started_at;
+        const currentTime = new Date();
+        const workflowStartTime = new Date(startedAt);
+        const durationSeconds = Math.floor((currentTime.getTime() - workflowStartTime.getTime()) / 1000);
+
+        // Log the time the build has been running and its current status
+        logger.info(`Build is running for: ${durationSeconds} seconds, current status is: "${workflowRun.status}"`);
     }
 
     /**
@@ -314,6 +334,8 @@ export class GithubApiManager {
         const checkIfWorkflowRunCompleted = async (): Promise<WorkflowRun | null> => {
             const workflowRun = await this.getWorkflowRun(branch, customWorkflowRunId);
             if (workflowRun) {
+                GithubApiManager.logHowMuchTimePassed(workflowRun);
+
                 if (workflowRun.status) {
                     if (!IN_PROGRESS_STATUSES[workflowRun.status as keyof Statuses]) {
                         logger.info(`Workflow run completed with status: "${workflowRun.status}"`);
@@ -325,12 +347,12 @@ export class GithubApiManager {
                 }
             }
 
-            // Check if the timeoutMs has been reached
+            // Check if the workflowRunCompletionTimeoutMs has been reached
             if (Date.now() - startTime > workflowRunCompletionTimeoutMs) {
                 throw new Error('Timeout reached waiting for workflow run completion');
             }
 
-            // Wait for the defined intervalMs then check again
+            // Wait for the defined interval and then check again
             await sleep(POLLING_INTERVAL_MS);
             return checkIfWorkflowRunCompleted();
         };
@@ -433,5 +455,62 @@ export class GithubApiManager {
         await Promise.all(artifactsList.map((artifact) => {
             return this.downloadArtifactToPath(artifact, artifactsPath);
         }));
+    }
+
+    /**
+     * Fetches the logs for a given workflow run.
+     * The logs are fetched from the GitHub API and returned as a string.
+     * @param workflowRunId The ID of the workflow run.
+     * @returns A promise that resolves to the logs for the workflow run.
+     */
+    async fetchWorkflowRunLogs(workflowRunId: number): Promise<string> {
+        /**
+         * In the archive with logs there are several files, separated by jobs,
+         * but we are interested in the whole log, which is in the file with the name "0_<job_name>.txt".
+         */
+        const WHOLE_LOG_PATH_BEGINNING = '0_';
+        const LOG_EXTENSION = '.txt';
+
+        const logContent: string[] = [];
+
+        try {
+            // Fetch the URL for the workflow logs.
+            const response = await this.githubApiClient.getWorkflowRunLogsUrl(workflowRunId);
+            if (!response || !response.url) {
+                throw new Error(`Unable to retrieve log URL or URL is undefined for workflowRunId: ${workflowRunId}`);
+            }
+
+            const { data: logsStream } = await axios.get(
+                response.url,
+                { responseType: 'stream' },
+            );
+
+            // Using a stream pipeline to process the stream and print the log data.
+            await pipelinePromise(
+                logsStream,
+                unzipper.Parse(),
+                new Writable({
+                    objectMode: true,
+                    async write(entry, encoding, callback): Promise<void> {
+                        if (entry.path.startsWith(WHOLE_LOG_PATH_BEGINNING) && entry.path.endsWith(LOG_EXTENSION)) {
+                            for await (const chunk of entry) {
+                                logContent.push(chunk);
+                            }
+                            callback();
+                        } else {
+                            // Skip non-required files.
+                            entry.autodrain().on('finish', callback);
+                        }
+                    },
+                }),
+            );
+            return [
+                '\n----GITHUB WORKFLOW RUN LOGS START----\n',
+                logContent.join(''),
+                '----GITHUB WORKFLOW RUN LOGS END----\n',
+            ].join('');
+        } catch (e) {
+            throw new Error(`Failed to fetch logs: ${e}`);
+        }
     }
 }
