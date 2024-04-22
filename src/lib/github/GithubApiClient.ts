@@ -95,7 +95,7 @@ export class GithubApiClient {
      * @returns A promise that resolves to the dispatch event creation response.
      */
     async createDispatchEvent(workflow: string, branch: string, workflowRunCustomId: string):
-    Promise<RestEndpointMethodTypes['actions']['createWorkflowDispatch']['response']> {
+    Promise<RestEndpointMethodTypes['actions']['createWorkflowDispatch']> {
         return this.octokit.request('POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches', {
             owner: this.owner,
             repo: this.repo,
