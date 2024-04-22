@@ -6,7 +6,7 @@
         "prepack": "pnpm build",
         "watch": "rollup -c rollup.config.ts --configPlugin typescript --watch",
         "build": "rimraf dist && rollup -c rollup.config.ts --configPlugin typescript && pnpm build:types",
-        "test": "pnpm run test:smoke",
+        "test": "pnpm run test:smoke && jest",
         "lint": "eslint --cache . && tsc -p tsconfig.eslint.json --noEmit",
         "build:types": "tsc --project tsconfig.json --declaration --emitDeclarationOnly --outdir dist/types --rootDir src",
         "build:txt": "ts-node scripts/build-txt",
