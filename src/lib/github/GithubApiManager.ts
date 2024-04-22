@@ -270,18 +270,12 @@ export class GithubApiManager {
 
     /**
      * Logs how much time has passed since the workflow run started.
-     * @param workflowRun The workflow run info to log the time for.
+     * @param workflowRun The workflow run to log the status of.
+     * @param startTime The time when the workflow run started.
      */
-    private static logHowMuchTimePassed(workflowRun: WorkflowRun): void {
-        if (!workflowRun.run_started_at) {
-            // impossible here, since we log after workflow run has started
-            logger.error(`Workflow run has not started yet, status: ${workflowRun.status}}`);
-            return;
-        }
-
-        const startedAt = workflowRun.run_started_at;
+    private static logHowMuchTimePassed(workflowRun: WorkflowRun, startTime: number): void {
         const currentTime = new Date();
-        const workflowStartTime = new Date(startedAt);
+        const workflowStartTime = new Date(startTime);
         const durationSeconds = Math.floor((currentTime.getTime() - workflowStartTime.getTime()) / 1000);
 
         // Log the time the build has been running and its current status
@@ -334,7 +328,7 @@ export class GithubApiManager {
         const checkIfWorkflowRunCompleted = async (): Promise<WorkflowRun | null> => {
             const workflowRun = await this.getWorkflowRun(branch, customWorkflowRunId);
             if (workflowRun) {
-                GithubApiManager.logHowMuchTimePassed(workflowRun);
+                GithubApiManager.logHowMuchTimePassed(workflowRun, startTime);
 
                 if (workflowRun.status) {
                     if (!IN_PROGRESS_STATUSES[workflowRun.status as keyof Statuses]) {
