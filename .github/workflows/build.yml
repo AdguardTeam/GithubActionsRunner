@@ -10,6 +10,10 @@ on:
       id:
         type: 'string'
         description: 'Unique identifier for the workflow run. Needed for github-actions-runner'
+  # FIXME remove, needed only for appearing in the Actions tab
+  push:
+    branches:
+      - 'feature/AG-32057'
 
 ## Required for github-actions-runner
 run-name: ${{github.workflow}} [ID:${{ inputs.id }}]
