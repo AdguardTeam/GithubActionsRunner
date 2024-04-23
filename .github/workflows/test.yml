@@ -40,8 +40,14 @@ jobs:
           # install deps
           pnpm install
 
+          # Linting package
           pnpm lint
+
+          # Testing package
           pnpm test
+
+          # Testing that it can be built
+          pnpm build
   notify:
     needs: test
     # Run this job only if the previous job failed and the event was triggered by the 'AdguardTeam/GithubActionsRunner' repository
