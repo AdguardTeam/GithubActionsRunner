@@ -1,0 +1,76 @@
+# Builds project
+name: Build
+
+env:
+  NODE_VERSION: 20
+
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        type: 'string'
+        description: 'Unique identifier for the workflow run. Needed for github-actions-runner'
+
+## Required for github-actions-runner
+run-name: ${{github.workflow}} [ID:${{ inputs.id }}]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Number of commits to fetch. 0 indicates all history.
+          fetch-depth: 0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Run bash commands
+        shell: bash
+        run: |
+          ls -alt
+
+          # Install deps
+          pnpm install
+
+          pnpm lint
+          pnpm test
+
+          pnpm pack && mv adguard-github-actions-runner-*.tgz github-actions-runner.tgz
+      - name: Save dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-actions-runner.tgz
+          path: ./github-actions-runner.tgz
+  notify:
+    needs: test
+    # Run this job only if the previous job failed and the event was triggered by the 'AdguardTeam/GithubActionsRunner' repository
+    # Note: 'always()' is needed to run the notify job even if the test job was failed
+    if:
+      ${{
+      always() &&
+      needs.test.result == 'failure' &&
+      github.repository == 'AdguardTeam/GithubActionsRunner' &&
+      (
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+      )
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          fields: workflow, repo, message, commit, author, eventName, ref, job
+          job_name: test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

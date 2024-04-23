@@ -20,6 +20,8 @@ type WorkflowRun = WorkflowRuns[number];
 type Artifacts = RestEndpointMethodTypes['actions']['listWorkflowRunArtifacts']['response']['data']['artifacts'];
 type Artifact = Artifacts[number];
 
+export const WORKFLOW_RUN_SUCCESSFUL_CONCLUSION_STATUS = 'success';
+
 /**
  * Statuses for a workflow run, indicating state of the workflow in the progress.
  */
@@ -65,10 +67,10 @@ export class GithubApiManager {
      * Constructor.
      * Initializes a new instance of the GithubApiManager with the specified GitHub API client.
      *
-     * @param apiClient The GitHub API client.
+     * @param githubApiClient The GitHub API client.
      */
-    constructor(apiClient: GithubApiClient) {
-        this.githubApiClient = apiClient;
+    constructor(githubApiClient: GithubApiClient) {
+        this.githubApiClient = githubApiClient;
     }
 
     /**
@@ -270,18 +272,12 @@ export class GithubApiManager {
 
     /**
      * Logs how much time has passed since the workflow run started.
-     * @param workflowRun The workflow run info to log the time for.
+     * @param workflowRun The workflow run to log the status of.
+     * @param startTime The time when the workflow run started.
      */
-    private static logHowMuchTimePassed(workflowRun: WorkflowRun): void {
-        if (!workflowRun.run_started_at) {
-            // impossible here, since we log after workflow run has started
-            logger.error(`Workflow run has not started yet, status: ${workflowRun.status}}`);
-            return;
-        }
-
-        const startedAt = workflowRun.run_started_at;
+    private static logHowMuchTimePassed(workflowRun: WorkflowRun, startTime: number): void {
         const currentTime = new Date();
-        const workflowStartTime = new Date(startedAt);
+        const workflowStartTime = new Date(startTime);
         const durationSeconds = Math.floor((currentTime.getTime() - workflowStartTime.getTime()) / 1000);
 
         // Log the time the build has been running and its current status
@@ -334,7 +330,7 @@ export class GithubApiManager {
         const checkIfWorkflowRunCompleted = async (): Promise<WorkflowRun | null> => {
             const workflowRun = await this.getWorkflowRun(branch, customWorkflowRunId);
             if (workflowRun) {
-                GithubApiManager.logHowMuchTimePassed(workflowRun);
+                GithubApiManager.logHowMuchTimePassed(workflowRun, startTime);
 
                 if (workflowRun.status) {
                     if (!IN_PROGRESS_STATUSES[workflowRun.status as keyof Statuses]) {
@@ -445,11 +441,21 @@ export class GithubApiManager {
      * @param workflowRun The workflow run to download artifacts from.
      * @param artifactsPath The path to save the downloaded artifacts.
      * @returns A promise that resolves when all artifacts are downloaded.
-     * @throws An error if the download fails.
+     * @throws An error if the download fails or no artifacts are found.
      */
-    async downloadArtifacts(workflowRun: WorkflowRun, artifactsPath: string): Promise<void> {
+    async downloadArtifacts(workflowRun: Pick<WorkflowRun, 'name' | 'id'>, artifactsPath: string): Promise<void> {
         logger.info('Downloading artifacts...');
+
         const artifactsList = await this.listWorkflowArtifacts(workflowRun.id);
+
+        /**
+         * This method is called only when an artifacts path is provided, indicating that artifacts are expected.
+         * Consequently, if no artifacts are found, an error should be thrown.
+         */
+        if (artifactsList.length === 0) {
+            throw new Error(`No artifacts found for the workflow run with name: "${workflowRun.name}"`);
+        }
+
         logger.info(`Artifacts found: ${artifactsList.map((artifact) => artifact.name).join(', ')}`);
 
         await Promise.all(artifactsList.map((artifact) => {
