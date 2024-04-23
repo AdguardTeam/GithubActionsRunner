@@ -5,12 +5,14 @@ env:
   NODE_VERSION: 20
 
 on:
-  push:
-    branches:
-      - '*'
-    tags:
-      - v*
-  pull_request:
+  workflow_dispatch:
+    inputs:
+      id:
+        type: 'string'
+        description: 'Unique identifier for the workflow run. Needed for github-actions-runner'
+
+## Required for github-actions-runner
+run-name: ${{github.workflow}} [ID:${{ inputs.id }}]
 
 jobs:
   test:
