@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "A GitHub Action runner tool to automate repository mirroring, streamline command execution, and manage artifacts with enhanced logging.",
     "scripts": {
-        "prepack": "pnpm build",
+        "prepack": "pnpm build && pnpm build:txt",
         "watch": "rollup -c rollup.config.ts --configPlugin typescript --watch",
         "build": "rimraf dist && rollup -c rollup.config.ts --configPlugin typescript && pnpm build:types",
         "test": "jest",

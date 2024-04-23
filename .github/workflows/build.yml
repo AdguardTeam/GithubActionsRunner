@@ -44,11 +44,16 @@ jobs:
           pnpm test
 
           pnpm pack && mv adguard-github-actions-runner-*.tgz github-actions-runner.tgz
-      - name: Save dist artifact
+      - name: Save archived package
         uses: actions/upload-artifact@v4
         with:
           name: github-actions-runner.tgz
           path: ./github-actions-runner.tgz
+      - name: Save build.txt
+        uses: actions/upload-artifact@v4
+        with:
+          name: build.txt
+          path: ./dist/build.txt
   notify:
     needs: test
     # Run this job only if the previous job failed and the event was triggered by the 'AdguardTeam/GithubActionsRunner' repository
