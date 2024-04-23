@@ -20,6 +20,8 @@ type WorkflowRun = WorkflowRuns[number];
 type Artifacts = RestEndpointMethodTypes['actions']['listWorkflowRunArtifacts']['response']['data']['artifacts'];
 type Artifact = Artifacts[number];
 
+export const WORKFLOW_RUN_SUCCESSFUL_CONCLUSION_STATUS = 'success';
+
 /**
  * Statuses for a workflow run, indicating state of the workflow in the progress.
  */
@@ -439,11 +441,21 @@ export class GithubApiManager {
      * @param workflowRun The workflow run to download artifacts from.
      * @param artifactsPath The path to save the downloaded artifacts.
      * @returns A promise that resolves when all artifacts are downloaded.
-     * @throws An error if the download fails.
+     * @throws An error if the download fails or no artifacts are found.
      */
     async downloadArtifacts(workflowRun: WorkflowRun, artifactsPath: string): Promise<void> {
         logger.info('Downloading artifacts...');
+
         const artifactsList = await this.listWorkflowArtifacts(workflowRun.id);
+
+        /**
+         * This method is called only when an artifacts path is provided, indicating that artifacts are expected.
+         * Consequently, if no artifacts are found, an error should be thrown.
+         */
+        if (artifactsList.length === 0) {
+            throw new Error('No artifacts found');
+        }
+
         logger.info(`Artifacts found: ${artifactsList.map((artifact) => artifact.name).join(', ')}`);
 
         await Promise.all(artifactsList.map((artifact) => {

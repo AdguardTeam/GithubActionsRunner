@@ -1,5 +1,5 @@
 import { GithubApiClient } from './github/GithubApiClient';
-import { GithubApiManager } from './github/GithubApiManager';
+import { GithubApiManager, WORKFLOW_RUN_SUCCESSFUL_CONCLUSION_STATUS } from './github/GithubApiManager';
 import { logger, setLoggerLevel } from './utils/logger';
 
 /**
@@ -183,7 +183,12 @@ export class GitHubActionsRunner {
         const logs = await this.githubApiManager.fetchWorkflowRunLogs(workflowRun.id);
         logger.info(logs);
 
+        if (workflowRun.conclusion !== WORKFLOW_RUN_SUCCESSFUL_CONCLUSION_STATUS) {
+            throw new Error(`Workflow run failed with conclusion "${workflowRun.conclusion}".`);
+        }
+
         if (artifactsPath) {
+            // if no artifacts are found, the method will throw an error
             await this.githubApiManager.downloadArtifacts(workflowRun, artifactsPath);
         }
     }
