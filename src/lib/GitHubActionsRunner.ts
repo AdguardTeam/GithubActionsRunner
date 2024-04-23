@@ -184,7 +184,7 @@ export class GitHubActionsRunner {
         logger.info(logs);
 
         if (workflowRun.conclusion !== WORKFLOW_RUN_SUCCESSFUL_CONCLUSION_STATUS) {
-            throw new Error(`Workflow run failed with conclusion "${workflowRun.conclusion}".`);
+            throw new Error(`Workflow run failed with conclusion: "${workflowRun.conclusion}".`);
         }
 
         if (artifactsPath) {

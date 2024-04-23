@@ -67,10 +67,10 @@ export class GithubApiManager {
      * Constructor.
      * Initializes a new instance of the GithubApiManager with the specified GitHub API client.
      *
-     * @param apiClient The GitHub API client.
+     * @param githubApiClient The GitHub API client.
      */
-    constructor(apiClient: GithubApiClient) {
-        this.githubApiClient = apiClient;
+    constructor(githubApiClient: GithubApiClient) {
+        this.githubApiClient = githubApiClient;
     }
 
     /**
@@ -443,7 +443,7 @@ export class GithubApiManager {
      * @returns A promise that resolves when all artifacts are downloaded.
      * @throws An error if the download fails or no artifacts are found.
      */
-    async downloadArtifacts(workflowRun: WorkflowRun, artifactsPath: string): Promise<void> {
+    async downloadArtifacts(workflowRun: Pick<WorkflowRun, 'name' | 'id'>, artifactsPath: string): Promise<void> {
         logger.info('Downloading artifacts...');
 
         const artifactsList = await this.listWorkflowArtifacts(workflowRun.id);
@@ -453,7 +453,7 @@ export class GithubApiManager {
          * Consequently, if no artifacts are found, an error should be thrown.
          */
         if (artifactsList.length === 0) {
-            throw new Error('No artifacts found');
+            throw new Error(`No artifacts found for the workflow run with name: "${workflowRun.name}"`);
         }
 
         logger.info(`Artifacts found: ${artifactsList.map((artifact) => artifact.name).join(', ')}`);
