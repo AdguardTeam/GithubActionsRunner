@@ -1,9 +1,6 @@
 # Stage 1: Build environment
 FROM node:20.12.2-alpine AS builder
 
-## Set NODE_ENV to production
-#ENV NODE_ENV=production
-
 # Install PNPM globally with a specific version
 RUN npm install -g pnpm@8.15.7
 

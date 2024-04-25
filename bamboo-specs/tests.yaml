@@ -40,14 +40,12 @@ Test:
             # Set cache directory
             pnpm config set store-dir ${bamboo.cachePnpm}
 
-            # FIXME Remove after github-actions-runner will be in the docker image
             pnpm install
             pnpm build
 
             branch="${bamboo_planRepository_branchName}"
             revision="${bamboo_planRepository_revision}"
 
-            # FIXME use github-actions-runner binary after it will be exposed in the docker
             GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} node dist/bin/index.js run-action --repo AdguardTeam/GithubActionsRunner --branch "$branch" --rev "$revision" --workflow test.yml
   final-tasks:
     - script:
