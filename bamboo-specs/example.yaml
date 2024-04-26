@@ -2,10 +2,11 @@
 version: 2
 plan:
   project-key: AJL
-  key: GHACTIONSRUNBUILD
-  name: github-actions-runner - build
+  key: GHACTIONSRUNEXAMPLE
+  name: github-actions-runner - example
 variables:
-  dockerNode: adguard/node-ssh:18.19--0
+  #  TODO set tag
+  dockerNode: ghcr.io/adguardteam/githubactionsrunner:master
 
 stages:
   - Build:
@@ -37,25 +38,11 @@ Build:
 
             ls -laht
 
-            # Set cache directory
-            pnpm config set store-dir ${bamboo.cachePnpm}
-
-            pnpm install
-            pnpm build
-
             branch="${bamboo_planRepository_branchName}"
             revision="${bamboo_planRepository_revision}"
 
-            GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} node dist/bin/index.js run-action --repo AdguardTeam/GithubActionsRunner --branch "$branch" --rev "$revision" --workflow build.yml --artifacts-path .
-    - inject-variables:
-        file: build.txt
-        scope: RESULT
-        namespace: inject
-    - any-task:
-        plugin-key: com.atlassian.bamboo.plugins.vcs:task.vcs.tagging
-        configuration:
-          selectedRepository: defaultRepository
-          tagName: v${bamboo.inject.version}
+            # FIXME use github-actions-runner binary after it will be exposed in the docker
+            GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} github-actions-runner run-action --repo AdguardTeam/GithubActionsRunner --branch "$branch" --rev "$revision" --workflow example.yml --artifacts-path .
   final-tasks:
     - script:
         interpreter: SHELL
@@ -78,13 +65,15 @@ Build:
       shared: true
       required: true
   requirements:
-    - adg-docker: true
+    - adg-docker: 'true'
 
 triggers: []
 
 branches:
-  create: manually
-  delete: never
+  create: for-pull-request
+  delete:
+    after-deleted-days: '1'
+    after-inactive-days: '5'
   link-to-jira: true
 
 notifications:

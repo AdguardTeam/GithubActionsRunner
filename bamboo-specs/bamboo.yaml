@@ -12,3 +12,6 @@
 
 ---
 !include 'increment.yaml'
+
+---
+!include 'example.yaml'

@@ -1,0 +1,64 @@
+# Example workflow for github-actions-runner
+name: Example
+
+env:
+  NODE_VERSION: 20
+
+on:
+  workflow_dispatch:
+    inputs:
+      ## !NOTE: This input is required to identify the workflow run
+      id:
+        type: 'string'
+        description: 'Unique identifier for the workflow run. Needed for github-actions-runner to identify the run.'
+  push:
+    branches:
+      - 'feature/example'
+
+## !NOTE: This name is required to identify the workflow run
+run-name: ${{github.workflow}} [ID:${{ inputs.id }}]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Number of commits to fetch. 0 indicates all history.
+          fetch-depth: 0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Run bash commands
+        shell: bash
+        run: |
+          ls -alt
+
+          # Install deps
+          pnpm install
+
+          # Linting package
+          pnpm lint
+          
+          # Testing package
+          pnpm test
+
+          # Building package artifact
+          pnpm pack && mv adguard-github-actions-runner-*.tgz github-actions-runner.tgz
+      - name: Save archived package
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-actions-runner.tgz
+          path: ./github-actions-runner.tgz
+      - name: Save build.txt
+        uses: actions/upload-artifact@v4
+        with:
+          name: build.txt
+          path: ./dist/build.txt
