@@ -6,7 +6,7 @@ plan:
   name: github-actions-runner - example
 variables:
   #  TODO set tag
-  dockerNode: ghcr.io/adguardteam/githubactionsrunner:master
+  dockerNode: ghcr.io/adguardteam/githubactionsrunner:latest-no-entrypoint
 
 stages:
   - Test:
