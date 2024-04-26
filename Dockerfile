@@ -1,5 +1,5 @@
 # Stage 1: Build environment
-FROM node:20.12.2-alpine AS builder
+FROM node:20.12.2-bookworm-slim AS builder
 
 # Install PNPM globally with a specific version
 RUN npm install -g pnpm@8.15.7
@@ -20,7 +20,7 @@ COPY . .
 RUN pnpm run build
 
 # Stage 2: Runtime environment
-FROM node:20.12.2-alpine AS runtime
+FROM node:20.12.2-bookworm-slim AS runtime
 
 # Copy only the built executable and set permissions
 COPY --from=builder /app/dist/bin/index.js /usr/local/bin/github-actions-runner
