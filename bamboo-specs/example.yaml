@@ -5,7 +5,8 @@ plan:
   key: GHACTIONSRUNEXAMPLE
   name: github-actions-runner - example
 variables:
-  dockerNode: ghcr.io/adguardteam/githubactionsrunner:v1.0.1
+  #  TODO set tag
+  dockerNode: ghcr.io/adguardteam/githubactionsrunner:master
 
 stages:
   - Build:
