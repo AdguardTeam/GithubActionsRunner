@@ -26,7 +26,7 @@ program.command('run-action')
         '-r, --repo <repo>',
         'repository specified as "owner/repo", e.g., "AdguardTeam/GithubActionsRunner"',
     )
-    .requiredOption('-w, --workflow <workflow>', 'workflow file to trigger, e.g., "test.yaml"')
+    .requiredOption('-w, --workflow <workflow>', 'workflow file to trigger, e.g., "test.yml"')
     .requiredOption('-b, --branch <branch>', 'branch name')
     .requiredOption('-c, --rev <revision>', 'commit revision')
     .option(
