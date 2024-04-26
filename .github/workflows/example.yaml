@@ -11,6 +11,9 @@ on:
       id:
         type: 'string'
         description: 'Unique identifier for the workflow run. Needed for github-actions-runner to identify the run.'
+  push:
+    branches:
+      - 'feature/example'
 
 ## !NOTE: This name is required to identify the workflow run
 run-name: ${{github.workflow}} [ID:${{ inputs.id }}]
