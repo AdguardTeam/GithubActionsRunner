@@ -61,5 +61,27 @@ github-actions-runner run-action \
   --verbose
 ```
 
+### Docker:
+This CLI tool is also available as a Docker image, which can be used to run the tool in a containerized environment.
+The Docker image can be pulled from the GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/adguard/github-actions-runner:latest
+```
+
+To run the Docker image, you can use the following command:
+
+```bash
+docker run --rm -it ghcr.io/adguardteam/githubactionsrunner:latest run-action \
+  --repo "AdguardTeam/GithubActionsRunner" \
+  --workflow "build.yml" \
+  --branch "master" \
+  --rev "abc1234" \
+  --artifacts-path "./downloads" \
+  --commit-timeout 300 \
+  --branch-timeout 300 \
+  --verbose
+```
+
 ## Contributing
 Contributions to extend the functionality or improve the tool are welcome. Please refer to the project's repository on GitHub to submit issues or pull requests.
