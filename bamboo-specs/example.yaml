@@ -69,8 +69,10 @@ Build:
 triggers: []
 
 branches:
-  create: manually
-  delete: never
+  create: for-pull-request
+  delete:
+    after-deleted-days: '1'
+    after-inactive-days: '5'
   link-to-jira: true
 
 notifications:
