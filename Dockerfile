@@ -26,4 +26,9 @@ FROM node:20.12.2-bookworm-slim AS runtime
 COPY --from=builder /app/dist/bin/index.js /usr/local/bin/github-actions-runner
 RUN chmod +x /usr/local/bin/github-actions-runner
 
-ENTRYPOINT ["github-actions-runner"]
+ARG WITH_ENTRYPOINT=true
+# Conditionally add ENTRYPOINT based on build argument
+RUN if [ "$WITH_ENTRYPOINT" = "true" ]; then \
+  echo "Adding entrypoint"; \
+  ENTRYPOINT ["github-actions-runner"]; \
+fi

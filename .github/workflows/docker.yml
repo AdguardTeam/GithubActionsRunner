@@ -51,3 +51,15 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: "VERSION=${GITHUB_REF##*/}"
+
+      - name: Build Docker image without ENTRYPOINT
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}-no-entrypoint
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${GITHUB_REF##*/}
+            WITH_ENTRYPOINT=false
