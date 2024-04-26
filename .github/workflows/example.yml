@@ -7,7 +7,7 @@ env:
 on:
   workflow_dispatch:
     inputs:
-      ## !NODE: This input is required to identify the workflow run
+      ## !NOTE: This input is required to identify the workflow run
       id:
         type: 'string'
         description: 'Unique identifier for the workflow run. Needed for github-actions-runner to identify the run.'
