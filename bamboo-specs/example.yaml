@@ -1,0 +1,87 @@
+---
+version: 2
+plan:
+  project-key: AJL
+  key: GHACTIONSRUNEXAMPLE
+  name: github-actions-runner - example
+variables:
+  dockerNode: ghcr.io/adguardteam/githubactionsrunner:v1.0.1
+
+stages:
+  - Build:
+      manual: false
+      final: false
+      jobs:
+        - Build
+
+Build:
+  key: BUILD
+  other:
+    clean-working-dir: true
+  docker:
+    image: ${bamboo.dockerNode}
+    volumes:
+      ${system.PNPM_DIR}: "${bamboo.cachePnpm}"
+  tasks:
+    - checkout:
+        force-clean-build: true
+    - script:
+        interpreter: SHELL
+        scripts:
+          - |-
+            set -x
+            set -e
+
+            # Fix mixed logs
+            exec 2>&1
+
+            ls -laht
+
+            branch="${bamboo_planRepository_branchName}"
+            revision="${bamboo_planRepository_revision}"
+
+            # FIXME use github-actions-runner binary after it will be exposed in the docker
+            GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} github-actions-runner run-action --repo AdguardTeam/GithubActionsRunner --branch "$branch" --rev "$revision" --workflow build.yml --artifacts-path .
+  final-tasks:
+    - script:
+        interpreter: SHELL
+        scripts:
+          - |-
+            set -x
+            set -e
+
+            # Fix mixed logs
+            exec 2>&1
+
+            ls -laht
+
+            echo "Size before cleanup:" && du -h | tail -n 1
+            rm -rf node_modules
+            echo "Size after cleanup:" && du -h | tail -n 1
+  artifacts:
+    - name: github-actions-runner.tgz
+      pattern: github-actions-runner.tgz
+      shared: true
+      required: true
+  requirements:
+    - adg-docker: 'true'
+
+triggers: []
+
+branches:
+  create: manually
+  delete: never
+  link-to-jira: true
+
+notifications:
+  - events:
+      - plan-status-changed
+    recipients:
+      - webhook:
+          name: Build webhook
+          url: http://prod.jirahub.service.eu.consul/v1/webhook/bamboo
+
+labels: []
+
+other:
+  concurrent-build-plugin: system-default
