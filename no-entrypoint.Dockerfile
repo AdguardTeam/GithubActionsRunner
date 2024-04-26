@@ -25,5 +25,3 @@ FROM node:20.12.2-bookworm-slim AS runtime
 # Copy only the built executable and set permissions
 COPY --from=builder /app/dist/bin/index.js /usr/local/bin/github-actions-runner
 RUN chmod +x /usr/local/bin/github-actions-runner
-
-ENTRYPOINT ["github-actions-runner"]
