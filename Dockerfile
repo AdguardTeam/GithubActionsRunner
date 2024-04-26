@@ -26,4 +26,4 @@ FROM node:20.12.2-bookworm-slim AS runtime
 COPY --from=builder /app/dist/bin/index.js /usr/local/bin/github-actions-runner
 RUN chmod +x /usr/local/bin/github-actions-runner
 
-ENTRYPOINT ["/bin/sh"]
+ENTRYPOINT ["github-actions-runner"]
