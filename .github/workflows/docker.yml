@@ -6,7 +6,6 @@ on:
       - 'v*'
     branches:
       - 'master'
-      - 'fix/docker-2'
 
 env:
   REGISTRY: ghcr.io
