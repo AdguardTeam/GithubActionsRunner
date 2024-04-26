@@ -9,7 +9,7 @@ variables:
   dockerNode: ghcr.io/adguardteam/githubactionsrunner:master
 
 stages:
-  - Build:
+  - Test:
       manual: false
       final: false
       jobs:
