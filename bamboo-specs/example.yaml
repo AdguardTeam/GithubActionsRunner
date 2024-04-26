@@ -41,7 +41,7 @@ Build:
             revision="${bamboo_planRepository_revision}"
 
             # FIXME use github-actions-runner binary after it will be exposed in the docker
-            GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} github-actions-runner run-action --repo AdguardTeam/GithubActionsRunner --branch "$branch" --rev "$revision" --workflow build.yml --artifacts-path .
+            GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} github-actions-runner run-action --repo AdguardTeam/GithubActionsRunner --branch "$branch" --rev "$revision" --workflow example.yaml --artifacts-path .
   final-tasks:
     - script:
         interpreter: SHELL
