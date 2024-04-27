@@ -152,7 +152,7 @@ export class GitHubActionsRunner {
      * @param root0.workflowRunCompletionTimeoutMs Wait for workflow run completion timeout.
      * @param root0.secrets Secrets to pass to the action.
      * @param root0.syncSecrets Sync secrets with the repository.
-     * @param root0.version github actions runner version.
+     * @param root0.version A github-actions-runner version.
      * @returns A promise that resolves when the action is completed.
      * @throws Error if something went wrong.
      */

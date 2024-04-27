@@ -114,7 +114,6 @@ program.command('run-action')
             workflowRunCompletionTimeout,
             secret: secrets,
             syncSecrets,
-            version,
         } = options;
         const token = process.env.GITHUB_TOKEN;
         if (!token) {
@@ -143,7 +142,7 @@ program.command('run-action')
                 workflowRunCompletionTimeoutMs: workflowRunCompletionTimeout,
                 secrets,
                 syncSecrets,
-                version,
+                version: packageJson.version,
             });
         } catch (e) {
             logger.error(e);
