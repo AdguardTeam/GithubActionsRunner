@@ -5,7 +5,8 @@ plan:
   key: GHACTIONSRUNEXAMPLE
   name: github-actions-runner - example
 variables:
-  dockerNode: ghcr.io/adguardteam/githubactionsrunner:latest-ci
+  # TODO replace to :latest-ci
+  dockerNode: ghcr.io/adguardteam/githubactionsrunner:latest-no-entrypoint
 
 stages:
   - Test:
