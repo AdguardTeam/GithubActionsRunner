@@ -14,7 +14,7 @@ managing pipelines.
 
 ## Installation
 
-To get started with using `@adguard/github-actions-runner`, ensure that `Node.js` is installed on your system, then
+To get started with using `@adguard/github-actions-runner`, ensure that Node.js is installed on your system, then
 install the package with one of the following methods:
 
 - Using pnpm:

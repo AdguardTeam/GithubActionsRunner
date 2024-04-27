@@ -46,8 +46,6 @@ Test:
             # Combine stderr and stdout for consistent log output.
             exec 2>&1
 
-            github-actions-runner -V
-
             GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} github-actions-runner run-action \
               --repo AdguardTeam/GithubActionsRunner \
               --branch "${bamboo_planRepository_branchName}" \
