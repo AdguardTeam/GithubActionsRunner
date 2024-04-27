@@ -53,6 +53,7 @@ Test:
               --workflow example.yml \
               --artifacts-path . \
               --secret SECRET_KEY=SECRET_VALUE
+              -v
   # The artifacts produced by the workflow are downloaded and shared with the
   # Bamboo CI job. These artifacts can be then shared with other unrelated
   # Bamboo builds.
