@@ -8,6 +8,18 @@ jest.mock('../../src/lib/GitHubActionsRunner', () => ({
     })),
 }));
 
+beforeAll(() => {
+    delete process.env.GITHUB_TOKEN;
+});
+
+beforeEach(() => {
+    process.env.GITHUB_TOKEN = 'mock_value'; // Set mock environment variable expected by your CLI tool
+});
+
+afterEach(() => {
+    delete process.env.GITHUB_TOKEN;
+});
+
 describe('CLI Integration Tests', () => {
     it('should collect secrets correctly', async () => {
         // Perform command parsing to trigger action
