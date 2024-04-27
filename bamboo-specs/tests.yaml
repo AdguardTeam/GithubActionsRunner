@@ -32,7 +32,7 @@ Test:
             set -x
             set -e
 
-            # Fix mixed logs
+            # Combine stderr and stdout for consistent log output
             exec 2>&1
 
             ls -laht
@@ -59,7 +59,7 @@ Test:
             set -x
             set -e
 
-            # Fix mixed logs
+            # Combine stderr and stdout for consistent log output
             exec 2>&1
 
             ls -laht
