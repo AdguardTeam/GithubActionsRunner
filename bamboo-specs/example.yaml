@@ -18,7 +18,7 @@ variables:
   # Using github-actions-runner Docker image for the latest stable version.
   # latest-ci docker image does not have any entrypoint and has the
   # runner installed.
-  dockerNode: ghcr.io/adguardteam/githubactionsrunner:latest-ci
+  docker: ghcr.io/adguardteam/githubactionsrunner:latest-ci
 
 stages:
   - Test:
@@ -32,7 +32,7 @@ Test:
   other:
     clean-working-dir: true
   docker:
-    image: ${bamboo.dockerNode}
+    image: ${bamboo.docker}
   tasks:
     - checkout:
         force-clean-build: true
@@ -52,12 +52,13 @@ Test:
               --rev "${bamboo_planRepository_revision}" \
               --workflow example.yml \
               --artifacts-path .
+              --secret SECRET_KEY=SECRET_VALUE
   # The artifacts produced by the workflow are downloaded and shared with the
   # Bamboo CI job. These artifacts can be then shared with other unrelated
   # Bamboo builds.
   artifacts:
-    - name: github-actions-runner.tgz
-      pattern: github-actions-runner.tgz
+    - name: example.txt
+      pattern: example.txt
       shared: true
       required: true
   requirements:
