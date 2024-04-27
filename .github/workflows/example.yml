@@ -41,12 +41,6 @@ jobs:
           # Install deps
           pnpm install
 
-          # Linting package
-          pnpm lint
-          
-          # Testing package
-          pnpm test
-
           # Building package artifact
           pnpm pack && mv adguard-github-actions-runner-*.tgz github-actions-runner.tgz
 
