@@ -1,3 +1,13 @@
+# This is an example Atlassian Bamboo CI configuration that demonstrates how to
+# use github-actions-runner to run a GitHub Actions workflow in a Bamboo CI job.
+#
+# Check out .github/workflows/example.yml to see what workflow this Bamboo job
+# actually runs.
+#
+# This example demonstrates how to:
+# * Trigger a workflow run.
+# * Download the artifacts produced by the workflow.
+# * Pass secrets from the CI to the workflow.
 ---
 version: 2
 plan:
@@ -5,8 +15,10 @@ plan:
   key: GHACTIONSRUNEXAMPLE
   name: github-actions-runner - example
 variables:
-  # TODO replace to :latest-ci
-  dockerNode: ghcr.io/adguardteam/githubactionsrunner:latest-no-entrypoint
+  # Using github-actions-runner Docker image for the latest stable version.
+  # latest-ci docker image does not have any entrypoint and has the
+  # runner installed.
+  docker: ghcr.io/adguardteam/githubactionsrunner:latest-ci
 
 stages:
   - Test:
@@ -20,9 +32,7 @@ Test:
   other:
     clean-working-dir: true
   docker:
-    image: ${bamboo.dockerNode}
-    volumes:
-      ${system.PNPM_DIR}: ${bamboo.cachePnpm}
+    image: ${bamboo.docker}
   tasks:
     - checkout:
         force-clean-build: true
@@ -30,26 +40,25 @@ Test:
         interpreter: SHELL
         scripts:
           - |-
-            set -x
+            # Make sure the script fails on any error.
             set -e
 
-            # Combine stderr and stdout for consistent log output
+            # Combine stderr and stdout for consistent log output.
             exec 2>&1
-
-            ls -laht
-
-            branch="${bamboo_planRepository_branchName}"
-            revision="${bamboo_planRepository_revision}"
 
             GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} github-actions-runner run-action \
               --repo AdguardTeam/GithubActionsRunner \
-              --branch "$branch" \
-              --rev "$revision" \
+              --branch "${bamboo_planRepository_branchName}" \
+              --rev "${bamboo_planRepository_revision}" \
               --workflow example.yml \
               --artifacts-path . \
+              --secret SECRET_KEY=SECRET_VALUE
+  # The artifacts produced by the workflow are downloaded and shared with the
+  # Bamboo CI job. These artifacts can be then shared with other unrelated
+  # Bamboo builds.
   artifacts:
-    - name: github-actions-runner.tgz
-      pattern: github-actions-runner.tgz
+    - name: example.txt
+      pattern: example.txt
       shared: true
       required: true
   requirements:

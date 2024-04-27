@@ -76,18 +76,26 @@ export class GithubApiManager {
     }
 
     /**
-     * Checks if a commit exists.
-     * @param commitRef The reference for the commit to check (SHA).
-     * @returns A boolean indicating if the commit exists.
-     * @throws An error if the commit check fails.
+     * Checks if a commit exists for the specified commit reference.
+     * The function considers a commit to exist if the server returns a 200 OK status.
+     * It handles certain non-200 statuses explicitly without throwing:
+     * - 404 Not Found and 422 Unprocessable Entity are treated as the commit not existing.
+     *
+     * @param commitRef The SHA reference for the commit to check.
+     * @returns A boolean indicating if the commit exists (true) or not (false).
+     * @throws An error if the server response indicates an error (other than 404 or 422)
+     *         or if there is an issue with network connectivity or request formation.
      */
     private async hasCommit(commitRef: string): Promise<boolean> {
         try {
             const response = await this.githubApiClient.getCommit(commitRef);
             return response.status === HttpStatusCode.Ok;
         } catch (error) {
-            if (isErrorWithStatus(error) && error.status === HttpStatusCode.NotFound) {
-                return false;
+            if (isErrorWithStatus(error)) {
+                if (error.status === HttpStatusCode.NotFound || error.status === HttpStatusCode.UnprocessableEntity) {
+                    // Return false if the commit does not exist, or if the request is unprocessable
+                    return false;
+                }
             }
             throw error;
         }
