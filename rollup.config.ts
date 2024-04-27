@@ -13,7 +13,7 @@ const commonPlugins = [
 ];
 
 const bin = {
-    input: 'src/bin/index.ts',
+    input: 'src/cli/index.ts',
     output: [
         {
             dir: 'dist/bin',

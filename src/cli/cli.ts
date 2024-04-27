@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { Command, Option } from 'commander';
 
 import { GitHubActionsRunner } from '../lib/GitHubActionsRunner';
@@ -12,6 +11,17 @@ import {
 } from '../lib/constants';
 
 import 'dotenv/config';
+
+/**
+ * Collects repeatable values.
+ *
+ * @param value The value to collect.
+ * @param previous The previous values.
+ * @returns The new values.
+ */
+const collect = (value: string, previous: string[]): string[] => {
+    return previous.concat([value]);
+};
 
 const program = new Command();
 
@@ -77,6 +87,13 @@ program.command('run-action')
             )
             .argParser((value) => parseInt(value, 10) * 1000),
     )
+    .option(
+        '-s, --secret <KEY=VALUE>',
+        'Secret key-value pair for the GitHub Action workflow, e.g., "API_KEY=12345".'
+        + 'You can add multiple secrets by repeating the option.',
+        collect,
+        [],
+    )
     .option('-v, --verbose', 'enable verbose mode', false)
     .action(async (options) => {
         const {
@@ -90,6 +107,7 @@ program.command('run-action')
             branchTimeout,
             workflowRunCreationTimeout,
             workflowRunCompletionTimeout,
+            secret: secrets,
         } = options;
         const token = process.env.GITHUB_TOKEN;
         if (!token) {
@@ -116,6 +134,7 @@ program.command('run-action')
                 branchTimeoutMs: branchTimeout,
                 workflowRunCreationTimeoutMs: workflowRunCreationTimeout,
                 workflowRunCompletionTimeoutMs: workflowRunCompletionTimeout,
+                secrets,
             });
         } catch (e) {
             logger.error(e);
@@ -123,4 +142,4 @@ program.command('run-action')
         }
     });
 
-program.parse(process.argv);
+export { program };
