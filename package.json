@@ -1,6 +1,6 @@
 {
     "name": "@adguard/github-actions-runner",
-    "version": "1.0.5",
+    "version": "1.1.0",
     "description": "A GitHub Action runner tool to automate repository mirroring, streamline command execution, and manage artifacts with enhanced logging.",
     "scripts": {
         "prepack": "pnpm build && pnpm build:txt",
