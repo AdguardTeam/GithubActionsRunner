@@ -18,7 +18,7 @@ variables:
   # Using github-actions-runner Docker image for the latest stable version.
   # latest-ci docker image does not have any entrypoint and has the
   # runner installed.
-  docker: ghcr.io/adguardteam/githubactionsrunner:master-ci
+  docker: ghcr.io/adguardteam/githubactionsrunner:latest-ci
 
 stages:
   - Test:
