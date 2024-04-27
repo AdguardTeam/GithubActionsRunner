@@ -18,16 +18,19 @@ To get started with using `@adguard/github-actions-runner`, ensure that Node.js 
 install the package with one of the following methods:
 
 - Using pnpm:
+
 ```bash
 pnpm install @adguard/github-actions-runner
 ```
 
 - Using npm:
+
 ```bash
 npm install @adguard/github-actions-runner
 ```
 
 - Using yarn:
+
 ```bash
 yarn add @adguard/github-actions-runner
 ```
@@ -42,24 +45,17 @@ Usage: github-actions-runner run-action [options]
 Triggers a GitHub Action workflow run
 
 Options:
-  -r, --repo <repo>                                repository specified as "owner/repo", e.g.,
-                                                   "AdguardTeam/GithubActionsRunner"
+  -r, --repo <repo>                                repository specified as "owner/repo", e.g., "AdguardTeam/GithubActionsRunner"
   -w, --workflow <workflow>                        workflow file to trigger, e.g., "test.yml"
   -b, --branch <branch>                            branch name
   -c, --rev <revision>                             commit revision
-  -a, --artifacts-path [artifacts-path]            local path for downloading artifacts; if not specified, artifacts
-                                                   will not be downloaded
-  --commit-timeout [timeout-sec]                   timeout in seconds to wait for the commit to appear in the
-                                                   repository (default: 300 seconds)
-  --branch-timeout [timeout-sec]                   timeout in seconds to wait for the branch to appear in the
-                                                   repository (default: 300 seconds)
-  --workflow-run-creation-timeout [timeout-sec]    timeout in seconds to wait for the workflow run to be created
-                                                   (default: 300 seconds)
-  --workflow-run-completion-timeout [timeout-sec]  timeout in seconds to wait for the workflow run to be completed
-                                                   (default: 300 seconds)
-  -s, --secret <KEY=VALUE>                         Secret key-value pair for the GitHub Action workflow, e.g.,
-                                                   "API_KEY=12345".You can add multiple secrets by repeating the
-                                                   option. (default: [])
+  -a, --artifacts-path [artifacts-path]            local path for downloading artifacts; if not specified, artifacts will not be downloaded
+  --commit-timeout [timeout-sec]                   timeout in seconds to wait for the commit to appear in the repository (default: 300 seconds)
+  --branch-timeout [timeout-sec]                   timeout in seconds to wait for the branch to appear in the repository (default: 300 seconds)
+  --workflow-run-creation-timeout [timeout-sec]    timeout in seconds to wait for the workflow run to be created (default: 300 seconds)
+  --workflow-run-completion-timeout [timeout-sec]  timeout in seconds to wait for the workflow run to be completed (default: 300 seconds)
+  -s, --secret <KEY=VALUE>                         Secret key-value pair for the GitHub Action workflow, e.g., "API_KEY=12345".You can add multiple secrets by repeating the option. (default: [])
+  --sync-secrets                                   Sync secrets with the repository secrets. Secrets which were not provided will be removed (default: false)
   -v, --verbose                                    enable verbose mode (default: false)
   -h, --help                                       display help for command
 ```

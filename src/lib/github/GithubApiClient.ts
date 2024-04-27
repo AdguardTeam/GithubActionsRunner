@@ -218,4 +218,29 @@ export class GithubApiClient {
             key_id: publicKeyId,
         });
     }
+
+    /**
+     * Lists all secrets for the repository.
+     * @returns A promise that resolves to the list of secrets.
+     */
+    async listSecrets(): Promise<RestEndpointMethodTypes['actions']['listRepoSecrets']['response']> {
+        return this.octokit.request('GET /repos/{owner}/{repo}/actions/secrets', {
+            owner: this.owner,
+            repo: this.repo,
+            per_page: PER_PAGE,
+        });
+    }
+
+    /**
+     * Deletes a secret from the repository.
+     * @param key The secret name.
+     * @returns A promise that resolves to the response.
+     */
+    async deleteSecret(key: string): Promise<RestEndpointMethodTypes['actions']['deleteRepoSecret']['response']> {
+        return this.octokit.request('DELETE /repos/{owner}/{repo}/actions/secrets/{secret_name}', {
+            owner: this.owner,
+            repo: this.repo,
+            secret_name: key,
+        });
+    }
 }

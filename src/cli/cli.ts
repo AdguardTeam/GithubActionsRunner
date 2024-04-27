@@ -94,6 +94,11 @@ program.command('run-action')
         collect,
         [],
     )
+    .option(
+        '--sync-secrets',
+        'Sync secrets with the repository secrets. Secrets which were not provided will be removed',
+        false,
+    )
     .option('-v, --verbose', 'enable verbose mode', false)
     .action(async (options) => {
         const {
@@ -108,6 +113,7 @@ program.command('run-action')
             workflowRunCreationTimeout,
             workflowRunCompletionTimeout,
             secret: secrets,
+            syncSecrets,
         } = options;
         const token = process.env.GITHUB_TOKEN;
         if (!token) {
@@ -135,6 +141,7 @@ program.command('run-action')
                 workflowRunCreationTimeoutMs: workflowRunCreationTimeout,
                 workflowRunCompletionTimeoutMs: workflowRunCompletionTimeout,
                 secrets,
+                syncSecrets,
             });
         } catch (e) {
             logger.error(e);

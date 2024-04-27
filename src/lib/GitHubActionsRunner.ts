@@ -74,7 +74,13 @@ interface RunActionOptions {
     /**
      * Optional array of secret key-value pairs to pass to the workflow. Each pair should be formatted as "KEY=VALUE".
      */
-    secrets?: string[];
+    secrets: string[];
+
+    /**
+     * Optional flag to sync secrets.
+     * If true, it will sync secrets with the repository and remove any secrets that are not in the provided list.
+     */
+    syncSecrets?: boolean;
 }
 
 /**
@@ -140,6 +146,7 @@ export class GitHubActionsRunner {
      * @param root0.workflowRunCreationTimeoutMs Wait for workflow run creation timeout.
      * @param root0.workflowRunCompletionTimeoutMs Wait for workflow run completion timeout.
      * @param root0.secrets Secrets to pass to the action.
+     * @param root0.syncSecrets Sync secrets with the repository.
      * @returns A promise that resolves when the action is completed.
      * @throws Error if something went wrong.
      */
@@ -153,6 +160,7 @@ export class GitHubActionsRunner {
         workflowRunCreationTimeoutMs,
         workflowRunCompletionTimeoutMs,
         secrets,
+        syncSecrets,
     }: RunActionOptions): Promise<void> {
         logger.info(`Starting action for repository "${this.owner}/${this.repo}"`);
         logger.info(`Workflow: "${workflow}"`);
@@ -164,9 +172,7 @@ export class GitHubActionsRunner {
         await this.githubApiManager.waitForCommit(rev, commitTimeoutMs);
         await this.githubApiManager.waitForBranch(branch, branchTimeoutMs);
 
-        if (secrets) {
-            await this.githubApiManager.setSecrets(secrets);
-        }
+        await this.githubApiManager.setSecrets(secrets, syncSecrets);
 
         const customWorkflowRunId = await this.githubApiManager.triggerWorkflow(workflow, branch);
         const workflowRunInfo = await this.githubApiManager.waitForWorkflowRunCreation(

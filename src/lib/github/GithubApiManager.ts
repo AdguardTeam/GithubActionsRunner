@@ -548,26 +548,69 @@ export class GithubApiManager {
     }
 
     /**
+     * Syncs secrets with the repository.
+     * @param secrets The list of secrets to sync.
+     */
+    private async syncSecrets(secrets: string[]): Promise<void> {
+        logger.info('Syncing secrets with the repository...');
+
+        const response = await this.githubApiClient.listSecrets();
+        const existingSecrets = response.data.secrets.map((secret) => secret.name);
+        logger.debug(`Existing secrets: ${existingSecrets}`);
+
+        const secretsToRemove = existingSecrets.filter((existingSecret) => !secrets.includes(existingSecret));
+
+        // remove secrets that are not in the list
+        const removeSecretPromises = secretsToRemove.map(async (secret) => {
+            try {
+                const deleteResponse = await this.githubApiClient.deleteSecret(secret);
+                if (deleteResponse.status === HttpStatusCode.NoContent) {
+                    logger.info(`Secret "${secret}" removed successfully.`);
+                } else {
+                    logger.error(`Unexpected status when removing secret "${secret}": ${deleteResponse.status}`);
+                }
+            } catch (error) {
+                logger.error(`Error removing secret "${secret}": ${getErrorMessage(error)}`);
+            }
+        });
+
+        try {
+            await Promise.all(removeSecretPromises);
+        } catch (error) {
+            throw new Error(`Failed to remove one or more secrets: ${getErrorMessage(error)}`);
+        }
+
+        logger.info('Secrets synced successfully.');
+    }
+
+    /**
      * Sets secrets for a GitHub repository.
      * This function takes a list of secret key-value pairs, encrypts them with a repository-specific public key,
      * and then sets them in the repository. If a secret with the same key already exists, it is updated.
      *
      * @param secrets The list of secrets to set, provided as "KEY=VALUE" strings.
+     * @param syncSecrets A flag indicating whether to sync secrets with the repository.
+     * If true, secrets not provided will be removed.
      * @returns A promise that resolves when all secrets are set.
      * @throws An error if setting a secret fails or if there are issues during encryption.
      */
-    public async setSecrets(secrets: string[]): Promise<void> {
-        if (!Array.isArray(secrets) || secrets.length === 0) {
-            throw new Error('The secrets parameter must be a non-empty array.');
+    public async setSecrets(secrets: string[], syncSecrets = false): Promise<void> {
+        if (syncSecrets) {
+            // if secrets' array is empty, all secrets will be removed
+            await this.syncSecrets(secrets);
+        }
+
+        if (secrets.length === 0) {
+            return;
         }
 
         let publicKeyValue: string;
         let publicKeyId: string;
 
         try {
-            const response = await this.githubApiClient.getPublicKey();
-            publicKeyValue = response.data.key;
-            publicKeyId = response.data.key_id;
+            const { data } = await this.githubApiClient.getPublicKey();
+            publicKeyValue = data.key;
+            publicKeyId = data.key_id;
         } catch (err) {
             throw new Error('Failed to retrieve the public key for encryption.');
         }
