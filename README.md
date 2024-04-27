@@ -2,19 +2,15 @@
 
 ## Description
 
-Imagine that you have a CI pipeline, and you want to run a part of your tasks on GitHub
-Actions.
+`@adguard/github-actions-runner` is a versatile command-line interface (CLI) tool designed to facilitate automation with
+GitHub Actions. It simplifies tasks such as repository mirroring, command execution, and artifact management. By
+integrating with GitHub's robust API, it provides a seamless approach to running and managing workflows, ideal for
+developers and DevOps engineers looking to enhance their CI/CD processes.
 
-`@adguard/github-actions-runner` is a versatile command-line interface (CLI) tool designed to facilitate the
-automation of GitHub Actions. It is particularly geared towards simplifying repository mirroring, command execution, and
-artifact management. By leveraging GitHub's robust API, it provides a streamlined approach to running and managing
-GitHub workflows, making it an essential tool for developers who need to integrate GitHub Actions more deeply into their
-development and deployment processes.
-
-Whether you're a DevOps engineer or a software developer, this tool allows you to interact with GitHub Actions in a way
-that enhances productivity and offers greater flexibility. The CLI is designed with various use cases in mind, from
-automating workflows to managing artifacts, enabling developers to focus more on writing code and less on managing
-pipelines.
+This tool is designed to offer greater flexibility when interacting with GitHub Actions, allowing you to automate
+workflows, manage artifacts, and pass secrets securely. Whether you're a DevOps engineer or a software
+developer, `@adguard/github-actions-runner` enables you to focus on coding and development, reducing the overhead of
+managing pipelines.
 
 ## Installation
 
@@ -46,15 +42,24 @@ Usage: github-actions-runner run-action [options]
 Triggers a GitHub Action workflow run
 
 Options:
-  -r, --repo <repo>                                repository specified as "owner/repo", e.g., "AdguardTeam/GithubActionsRunner"
+  -r, --repo <repo>                                repository specified as "owner/repo", e.g.,
+                                                   "AdguardTeam/GithubActionsRunner"
   -w, --workflow <workflow>                        workflow file to trigger, e.g., "test.yml"
   -b, --branch <branch>                            branch name
   -c, --rev <revision>                             commit revision
-  -a, --artifacts-path [artifacts-path]            local path for downloading artifacts; if not specified, artifacts will not be downloaded
-  --commit-timeout [timeout-sec]                   timeout in seconds to wait for the commit to appear in the repository (default: 300 seconds)
-  --branch-timeout [timeout-sec]                   timeout in seconds to wait for the branch to appear in the repository (default: 300 seconds)
-  --workflow-run-creation-timeout [timeout-sec]    timeout in seconds to wait for the workflow run to be created (default: 300 seconds)
-  --workflow-run-completion-timeout [timeout-sec]  timeout in seconds to wait for the workflow run to be completed (default: 300 seconds)
+  -a, --artifacts-path [artifacts-path]            local path for downloading artifacts; if not specified, artifacts
+                                                   will not be downloaded
+  --commit-timeout [timeout-sec]                   timeout in seconds to wait for the commit to appear in the
+                                                   repository (default: 300 seconds)
+  --branch-timeout [timeout-sec]                   timeout in seconds to wait for the branch to appear in the
+                                                   repository (default: 300 seconds)
+  --workflow-run-creation-timeout [timeout-sec]    timeout in seconds to wait for the workflow run to be created
+                                                   (default: 300 seconds)
+  --workflow-run-completion-timeout [timeout-sec]  timeout in seconds to wait for the workflow run to be completed
+                                                   (default: 300 seconds)
+  -s, --secret <KEY=VALUE>                         Secret key-value pair for the GitHub Action workflow, e.g.,
+                                                   "API_KEY=12345".You can add multiple secrets by repeating the
+                                                   option. (default: [])
   -v, --verbose                                    enable verbose mode (default: false)
   -h, --help                                       display help for command
 ```
@@ -76,6 +81,9 @@ github-actions-runner run-action \
   --artifacts-path "./downloads" \
   --commit-timeout 300 \
   --branch-timeout 300 \
+  --workflow-run-completion-timeout 300 \
+  --secret "API_KEY=12345" \
+  --secret "API_KEY2=67890" \
   --verbose
 ```
 
