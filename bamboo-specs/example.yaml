@@ -5,8 +5,7 @@ plan:
   key: GHACTIONSRUNEXAMPLE
   name: github-actions-runner - example
 variables:
-  #  TODO set tag
-  dockerNode: ghcr.io/adguardteam/githubactionsrunner:master-no-entrypoint
+  dockerNode: ghcr.io/adguardteam/githubactionsrunner:latest-no-entrypoint
 
 stages:
   - Test:
@@ -41,7 +40,6 @@ Test:
             branch="${bamboo_planRepository_branchName}"
             revision="${bamboo_planRepository_revision}"
 
-            # FIXME use github-actions-runner binary after it will be exposed in the docker
             GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} github-actions-runner run-action --repo AdguardTeam/GithubActionsRunner --branch "$branch" --rev "$revision" --workflow example.yml --artifacts-path .
   final-tasks:
     - script:
