@@ -61,18 +61,20 @@ github-actions-runner run-action \
   --verbose
 ```
 
-### Docker:
-This CLI tool is also available as a Docker image, which can be used to run the tool in a containerized environment.
-The Docker image can be pulled from the GitHub Container Registry:
+### Docker
+This CLI tool is available as a Docker image, enabling its use in containerized environments. There are two Docker images available, each serving different use cases.
+
+#### Standard Docker Image
+The standard Docker image includes an `ENTRYPOINT` to simplify command execution. You can pull it from the GitHub Container Registry and run it like this:
 
 ```bash
 docker pull ghcr.io/adguard/github-actions-runner:latest
 ```
 
-To run the Docker image, you can use the following command:
+To run the image, use the following command:
 
 ```bash
-docker run --rm -it ghcr.io/adguardteam/githubactionsrunner:latest run-action \
+docker run --rm -it ghcr.io/adguard/github-actions-runner:latest run-action \
   --repo "AdguardTeam/GithubActionsRunner" \
   --workflow "build.yml" \
   --branch "master" \
@@ -82,6 +84,21 @@ docker run --rm -it ghcr.io/adguardteam/githubactionsrunner:latest run-action \
   --branch-timeout 300 \
   --verbose
 ```
+
+#### Docker Image without ENTRYPOINT
+This alternative Docker image doesn't set an `ENTRYPOINT`, providing more flexibility for advanced use cases. Pull it from the GitHub Container Registry and run it like this:
+
+```bash
+docker pull ghcr.io/adguard/github-actions-runner:latest-ci
+```
+
+To run the image, you need to specify the command manually:
+
+```bash
+docker run --rm -it ghcr.io/adguard/github-actions-runner:latest-ci /bin/sh
+```
+
+In this mode, you can execute commands manually inside the container or create custom entry points for specific workflows.
 
 ## Contributing
 Contributions to extend the functionality or improve the tool are welcome. Please refer to the project's repository on GitHub to submit issues or pull requests.
