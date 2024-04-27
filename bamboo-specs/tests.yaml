@@ -32,7 +32,7 @@ Test:
             set -x
             set -e
 
-            # Fix mixed logs
+            # Combine stderr and stdout for consistent log output
             exec 2>&1
 
             ls -laht
@@ -46,7 +46,11 @@ Test:
             branch="${bamboo_planRepository_branchName}"
             revision="${bamboo_planRepository_revision}"
 
-            GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} node dist/bin/index.js run-action --repo AdguardTeam/GithubActionsRunner --branch "$branch" --rev "$revision" --workflow test.yml
+            GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} node dist/bin/index.js run-action \
+              --repo AdguardTeam/GithubActionsRunner \
+              --branch "$branch" \
+              --rev "$revision" \
+              --workflow test.yml
   final-tasks:
     - script:
         interpreter: SHELL
@@ -55,7 +59,7 @@ Test:
             set -x
             set -e
 
-            # Fix mixed logs
+            # Combine stderr and stdout for consistent log output
             exec 2>&1
 
             ls -laht

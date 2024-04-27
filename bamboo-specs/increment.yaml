@@ -32,7 +32,7 @@ Increment:
             set -x
             set -e
 
-            # Fix mixed logs
+            # Combine stderr and stdout for consistent log output
             exec 2>&1
 
             ls -alt

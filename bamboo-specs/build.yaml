@@ -32,7 +32,7 @@ Build:
             set -x
             set -e
 
-            # Fix mixed logs
+            # Combine stderr and stdout for consistent log output
             exec 2>&1
 
             ls -laht
@@ -46,7 +46,12 @@ Build:
             branch="${bamboo_planRepository_branchName}"
             revision="${bamboo_planRepository_revision}"
 
-            GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} node dist/bin/index.js run-action --repo AdguardTeam/GithubActionsRunner --branch "$branch" --rev "$revision" --workflow build.yml --artifacts-path .
+            GITHUB_TOKEN=${bamboo.githubActionsRunnerPassword} node dist/bin/index.js run-action \
+              --repo AdguardTeam/GithubActionsRunner \
+              --branch "$branch" \
+              --rev "$revision" \
+              --workflow build.yml \
+              --artifacts-path .
     - inject-variables:
         file: build.txt
         scope: RESULT
@@ -64,7 +69,7 @@ Build:
             set -x
             set -e
 
-            # Fix mixed logs
+            # Combine stderr and stdout for consistent log output
             exec 2>&1
 
             ls -laht

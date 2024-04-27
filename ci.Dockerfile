@@ -1,3 +1,7 @@
+# This Dockerfile is used to build the GitHub Actions Runner image used in the CI pipeline.
+# It doesn't has the ENTRYPOINT instruction, so it can't be used to run the image as a container.
+# The ENTRYPOINT instruction is added in the Dockerfile in the root of the project.
+
 # Stage 1: Build environment
 FROM node:20.12.2-bookworm-slim AS builder
 

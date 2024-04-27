@@ -1,28 +1,44 @@
 # @adguard/github-actions-runner
 
 ## Description
-`@adguard/github-actions-runner` is a versatile command-line interface (CLI) tool designed to facilitate the automation of GitHub Actions, particularly geared towards simplifying repository mirroring, command execution, and artifact management in a seamless manner. It leverages GitHub's robust API to offer a streamlined approach to running and managing GitHub workflows, making it an essential tool for developers looking to integrate GitHub Actions more deeply into their development and deployment processes.
+
+Imagine that you have a CI pipeline, and you want to run a part of your tasks on GitHub
+Actions.
+
+`@adguard/github-actions-runner` is a versatile command-line interface (CLI) tool designed to facilitate the
+automation of GitHub Actions. It is particularly geared towards simplifying repository mirroring, command execution, and
+artifact management. By leveraging GitHub's robust API, it provides a streamlined approach to running and managing
+GitHub workflows, making it an essential tool for developers who need to integrate GitHub Actions more deeply into their
+development and deployment processes.
+
+Whether you're a DevOps engineer or a software developer, this tool allows you to interact with GitHub Actions in a way
+that enhances productivity and offers greater flexibility. The CLI is designed with various use cases in mind, from
+automating workflows to managing artifacts, enabling developers to focus more on writing code and less on managing
+pipelines.
 
 ## Installation
-To get started with using `@adguard/github-actions-runner`, ensure that Node.js is installed on your system, and then you can install the package via:
 
-pnpm:
+To get started with using `@adguard/github-actions-runner`, ensure that Node.js is installed on your system, then
+install the package with one of the following methods:
+
+- Using pnpm:
 ```bash
 pnpm install @adguard/github-actions-runner
 ```
 
-npm:
+- Using npm:
 ```bash
 npm install @adguard/github-actions-runner
 ```
 
-or yarn:
+- Using yarn:
 ```bash
 yarn add @adguard/github-actions-runner
 ```
 
 ## Usage
-The CLI tool can be used to trigger and manage GitHub Actions with the following command format:
+
+The CLI tool can trigger and manage GitHub Actions with the following command format:
 
 ```bash
 Usage: github-actions-runner run-action [options]
@@ -44,12 +60,14 @@ Options:
 ```
 
 ### Note:
+
 Ensure that you have a valid `GITHUB_TOKEN` set in your environment variables for authentication.
 
 ### Example:
+
 To run a GitHub Action workflow with the specified configuration:
 
-```
+```bash
 github-actions-runner run-action \
   --repo "AdguardTeam/GithubActionsRunner" \
   --workflow "build.yml" \
@@ -61,18 +79,24 @@ github-actions-runner run-action \
   --verbose
 ```
 
-### Docker:
-This CLI tool is also available as a Docker image, which can be used to run the tool in a containerized environment.
-The Docker image can be pulled from the GitHub Container Registry:
+### Docker
+
+This CLI tool is available as a Docker image, enabling its use in containerized environments. There are two Docker
+images available, each serving different use cases.
+
+#### Standard Docker Image
+
+The standard Docker image includes an `ENTRYPOINT` to simplify command execution. You can pull it from the GitHub
+Container Registry and run it like this:
 
 ```bash
 docker pull ghcr.io/adguard/github-actions-runner:latest
 ```
 
-To run the Docker image, you can use the following command:
+To run the image, use the following command:
 
 ```bash
-docker run --rm -it ghcr.io/adguardteam/githubactionsrunner:latest run-action \
+docker run --rm -it ghcr.io/adguard/github-actions-runner:latest run-action \
   --repo "AdguardTeam/GithubActionsRunner" \
   --workflow "build.yml" \
   --branch "master" \
@@ -83,5 +107,25 @@ docker run --rm -it ghcr.io/adguardteam/githubactionsrunner:latest run-action \
   --verbose
 ```
 
+#### Docker Image without ENTRYPOINT
+
+This alternative Docker image doesn't set an `ENTRYPOINT`, providing more flexibility for advanced use cases. Pull it
+from the GitHub Container Registry and run it like this:
+
+```bash
+docker pull ghcr.io/adguard/github-actions-runner:latest-ci
+```
+
+To run the image, you need to specify the command manually:
+
+```bash
+docker run --rm -it ghcr.io/adguard/github-actions-runner:latest-ci /bin/sh
+```
+
+In this mode, you can execute commands manually inside the container or create custom entry points for specific
+workflows.
+
 ## Contributing
-Contributions to extend the functionality or improve the tool are welcome. Please refer to the project's repository on GitHub to submit issues or pull requests.
+
+Contributions to extend the functionality or improve the tool are welcome. Please refer to the project's repository on
+GitHub to submit issues or pull requests.

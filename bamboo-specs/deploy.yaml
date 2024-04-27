@@ -24,7 +24,7 @@ npmjs:
             set -e
             set -x
 
-            # Fix mixed logs
+            # Combine stderr and stdout for consistent log output
             exec 2>&1
 
             ls -laht
