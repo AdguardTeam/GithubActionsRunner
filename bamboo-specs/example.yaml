@@ -46,8 +46,8 @@ Test:
               --branch "$branch" \
               --rev "$revision" \
               --workflow example.yml \
-              --artifacts-path .
-              --secret SECRET_KEY=SECRET_VALUE
+              --artifacts-path . \
+              --secret SECRET_KEY=SECRET_VALUE \
               --secret SECRET_KEY2=SECRET_VALUE2
   artifacts:
     - name: github-actions-runner.tgz
