@@ -47,6 +47,8 @@ Test:
               --rev "$revision" \
               --workflow example.yml \
               --artifacts-path .
+              --secret KEY=VALUE
+              --secret KEY2=VALUE2
   artifacts:
     - name: github-actions-runner.tgz
       pattern: github-actions-runner.tgz
