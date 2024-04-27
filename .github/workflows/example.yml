@@ -49,6 +49,9 @@ jobs:
 
           # Building package artifact
           pnpm pack && mv adguard-github-actions-runner-*.tgz github-actions-runner.tgz
+
+          # Show that secrets are encoded
+          echo "Secret is ${{ secrets.SECRET_KEY }}"
       - name: Save archived package
         uses: actions/upload-artifact@v4
         with:

@@ -1,6 +1,6 @@
 {
     "name": "@adguard/github-actions-runner",
-    "version": "1.0.5",
+    "version": "1.1.0",
     "description": "A GitHub Action runner tool to automate repository mirroring, streamline command execution, and manage artifacts with enhanced logging.",
     "scripts": {
         "prepack": "pnpm build && pnpm build:txt",
@@ -53,6 +53,7 @@
         "commander": "^12.0.0",
         "dotenv": "^16.4.5",
         "fs-extra": "^11.2.0",
+        "libsodium-wrappers": "^0.7.13",
         "nanoid": "^5.0.7",
         "octokit": "^3.2.0",
         "unzipper": "^0.11.3",
@@ -69,6 +70,7 @@
         "@swc/jest": "^0.2.36",
         "@types/fs-extra": "^11.0.4",
         "@types/jest": "^29.5.12",
+        "@types/libsodium-wrappers": "^0.7.14",
         "@types/node": "^20.12.7",
         "@types/unzipper": "^0.10.9",
         "@typescript-eslint/eslint-plugin": "^7.7.0",

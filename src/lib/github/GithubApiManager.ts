@@ -6,12 +6,14 @@ import { pipeline, Writable } from 'stream';
 import { promisify } from 'util';
 import * as unzipper from 'unzipper';
 import { ensureDir } from 'fs-extra';
+import sodium from 'libsodium-wrappers';
 
 import { sleep } from '../utils/time';
 import { isErrorWithStatus } from '../utils/errors';
 import { type GithubApiClient } from './GithubApiClient';
 import { logger } from '../utils/logger';
 import { ARTIFACTS_MAX_DOWNLOAD_SIZE_BYTES, POLLING_INTERVAL_MS } from '../constants';
+import { getErrorMessage } from '../utils/errors/errors';
 
 const pipelinePromise = promisify(pipeline);
 
@@ -79,7 +81,7 @@ export class GithubApiManager {
      * @returns A boolean indicating if the commit exists.
      * @throws An error if the commit check fails.
      */
-    async hasCommit(commitRef: string): Promise<boolean> {
+    private async hasCommit(commitRef: string): Promise<boolean> {
         try {
             const response = await this.githubApiClient.getCommit(commitRef);
             return response.status === HttpStatusCode.Ok;
@@ -98,7 +100,7 @@ export class GithubApiManager {
      * @param waitForCommitTimeoutMs The maximum time to wait in milliseconds.
      * @throws An error if the commit does not exist within the timeout.
      */
-    async waitForCommit(
+    public async waitForCommit(
         commitRef: string,
         waitForCommitTimeoutMs: number,
     ): Promise<void> {
@@ -134,7 +136,7 @@ export class GithubApiManager {
      * @returns A boolean indicating if the branch exists.
      * @throws An error if the branch check fails.
      */
-    async hasBranch(branch: string): Promise<boolean> {
+    private async hasBranch(branch: string): Promise<boolean> {
         try {
             const response = await this.githubApiClient.getBranch(branch);
             return response.status === HttpStatusCode.Ok;
@@ -152,7 +154,7 @@ export class GithubApiManager {
      * @param waitForBranchTimeoutMs The maximum time to wait in milliseconds.
      * @throws An error if the branch does not exist within the timeout.
      */
-    async waitForBranch(
+    public async waitForBranch(
         branchName: string,
         waitForBranchTimeoutMs: number,
     ): Promise<void> {
@@ -189,7 +191,7 @@ export class GithubApiManager {
      * @returns The custom ID of the workflow run.
      * @throws An error if the workflow trigger fails.
      */
-    async triggerWorkflow(workflow: string, branch: string): Promise<string> {
+    public async triggerWorkflow(workflow: string, branch: string): Promise<string> {
         logger.info(`Triggering workflow "${workflow}" on branch "${branch}"...`);
 
         const workflowRunCustomId = nanoid();
@@ -212,7 +214,7 @@ export class GithubApiManager {
      * @returns The workflow run if found, otherwise null.
      * @throws An error if the workflow run retrieval fails.
      */
-    async getWorkflowRun(branch: string, customWorkflowRunId: string): Promise<WorkflowRun | null> {
+    private async getWorkflowRun(branch: string, customWorkflowRunId: string): Promise<WorkflowRun | null> {
         const workflowRunsResponse = await this.githubApiClient.listWorkflowRuns(branch);
         if (!workflowRunsResponse || !workflowRunsResponse.data || !workflowRunsResponse.data.workflow_runs) {
             return null;
@@ -236,7 +238,7 @@ export class GithubApiManager {
      * @returns The workflow run if found, otherwise null.
      * @throws An error if the workflow run creation fails.
      */
-    async waitForWorkflowRunCreation(
+    public async waitForWorkflowRunCreation(
         branch: string,
         customWorkflowRunId: string,
         workflowRunCreationTimeoutMs: number,
@@ -293,7 +295,7 @@ export class GithubApiManager {
      * @returns The workflow run if found, otherwise null.
      * @throws An error if the workflow run completion fails.
      */
-    async waitForWorkflowRunCompletion(
+    public async waitForWorkflowRunCompletion(
         branch: string,
         customWorkflowRunId: string,
         workflowRunCompletionTimeoutMs: number,
@@ -367,7 +369,7 @@ export class GithubApiManager {
      * @returns A promise that resolves when the download and extraction are complete.
      * @throws An error if the download or extraction fails.
      */
-    async downloadArtifactToPath(artifact: Artifact, artifactsPath: string): Promise<void> {
+    private async downloadArtifactToPath(artifact: Artifact, artifactsPath: string): Promise<void> {
         try {
             const url = await this.getArtifactDownloadUrl(artifact.id);
 
@@ -405,7 +407,7 @@ export class GithubApiManager {
      * @returns A promise that resolves to the list of artifacts.
      * @throws An error if the artifact listing fails.
      */
-    async listWorkflowArtifacts(workflowRunId: number): Promise<Artifacts> {
+    private async listWorkflowArtifacts(workflowRunId: number): Promise<Artifacts> {
         try {
             const response = await this.githubApiClient.listWorkflowArtifacts(workflowRunId);
             const { artifacts } = response.data;
@@ -423,7 +425,7 @@ export class GithubApiManager {
      * @returns A promise that resolves to the download URL of the artifact.
      * @throws An error if the download URL retrieval fails.
      */
-    async getArtifactDownloadUrl(artifactId: number): Promise<string> {
+    private async getArtifactDownloadUrl(artifactId: number): Promise<string> {
         try {
             const response = await this.githubApiClient.getArtifactDownloadUrl(artifactId);
             if (response.status === HttpStatusCode.Ok && response.url) {
@@ -443,7 +445,10 @@ export class GithubApiManager {
      * @returns A promise that resolves when all artifacts are downloaded.
      * @throws An error if the download fails or no artifacts are found.
      */
-    async downloadArtifacts(workflowRun: Pick<WorkflowRun, 'name' | 'id'>, artifactsPath: string): Promise<void> {
+    public async downloadArtifacts(
+        workflowRun: Pick<WorkflowRun, 'name' | 'id'>,
+        artifactsPath: string,
+    ): Promise<void> {
         logger.info('Downloading artifacts...');
 
         const artifactsList = await this.listWorkflowArtifacts(workflowRun.id);
@@ -469,7 +474,7 @@ export class GithubApiManager {
      * @param workflowRunId The ID of the workflow run.
      * @returns A promise that resolves to the logs for the workflow run.
      */
-    async fetchWorkflowRunLogs(workflowRunId: number): Promise<string> {
+    public async fetchWorkflowRunLogs(workflowRunId: number): Promise<string> {
         /**
          * In the archive with logs there are several files, separated by jobs,
          * but we are interested in the whole log, which is in the file with the name "0_<job_name>.txt".
@@ -517,6 +522,132 @@ export class GithubApiManager {
             ].join('');
         } catch (e) {
             throw new Error(`Failed to fetch logs: ${e}`);
+        }
+    }
+
+    /**
+     * Encrypts a secret value using a public key.
+     * This function uses the `sodium` library to securely encrypt a given secret value with a public key.
+     *
+     * @param publicKey The public key used for encryption. This key must be in Base64 format.
+     * @param secretValue The secret value to encrypt, typically a password or token.
+     * @returns A promise that resolves to the encrypted value in Base64 format.
+     */
+    private static async encryptValue(publicKey: string, secretValue: string): Promise<string> {
+        await sodium.ready;
+
+        // Convert the public key and secret to Uint8Array for encryption
+        const binkey = sodium.from_base64(publicKey, sodium.base64_variants.ORIGINAL);
+        const binsec = sodium.from_string(secretValue);
+
+        // Encrypt the secret value using the public key
+        const encBytes = sodium.crypto_box_seal(binsec, binkey);
+
+        // Convert the encrypted data to Base64 for easier storage and transmission
+        return sodium.to_base64(encBytes, sodium.base64_variants.ORIGINAL);
+    }
+
+    /**
+     * Syncs secrets with the repository.
+     * @param secrets The list of secrets to sync.
+     */
+    private async syncSecrets(secrets: string[]): Promise<void> {
+        logger.info('Syncing secrets with the repository...');
+
+        const response = await this.githubApiClient.listSecrets();
+        const existingSecrets = response.data.secrets.map((secret) => secret.name);
+        logger.debug(`Existing secrets: ${existingSecrets}`);
+
+        const secretsToRemove = existingSecrets.filter((existingSecret) => !secrets.includes(existingSecret));
+
+        // remove secrets that are not in the list
+        const removeSecretPromises = secretsToRemove.map(async (secret) => {
+            try {
+                const deleteResponse = await this.githubApiClient.deleteSecret(secret);
+                if (deleteResponse.status === HttpStatusCode.NoContent) {
+                    logger.info(`Secret "${secret}" removed successfully.`);
+                } else {
+                    logger.error(`Unexpected status when removing secret "${secret}": ${deleteResponse.status}`);
+                }
+            } catch (error) {
+                logger.error(`Error removing secret "${secret}": ${getErrorMessage(error)}`);
+            }
+        });
+
+        try {
+            await Promise.all(removeSecretPromises);
+        } catch (error) {
+            throw new Error(`Failed to remove one or more secrets: ${getErrorMessage(error)}`);
+        }
+
+        logger.info('Secrets synced successfully.');
+    }
+
+    /**
+     * Sets secrets for a GitHub repository.
+     * This function takes a list of secret key-value pairs, encrypts them with a repository-specific public key,
+     * and then sets them in the repository. If a secret with the same key already exists, it is updated.
+     *
+     * @param secrets The list of secrets to set, provided as "KEY=VALUE" strings.
+     * @param syncSecrets A flag indicating whether to sync secrets with the repository.
+     * If true, secrets not provided will be removed.
+     * @returns A promise that resolves when all secrets are set.
+     * @throws An error if setting a secret fails or if there are issues during encryption.
+     */
+    public async setSecrets(secrets: string[], syncSecrets = false): Promise<void> {
+        if (syncSecrets) {
+            // if secrets' array is empty, all secrets will be removed
+            await this.syncSecrets(secrets);
+        }
+
+        if (secrets.length === 0) {
+            return;
+        }
+
+        let publicKeyValue: string;
+        let publicKeyId: string;
+
+        try {
+            const { data } = await this.githubApiClient.getPublicKey();
+            publicKeyValue = data.key;
+            publicKeyId = data.key_id;
+        } catch (err) {
+            throw new Error('Failed to retrieve the public key for encryption.');
+        }
+
+        const secretPromises = secrets.map(async (secret) => {
+            if (!secret || !secret.includes('=')) {
+                logger.warn('Invalid secret format: ', secret);
+                return;
+            }
+
+            const [key, value] = secret.split('=');
+
+            if (!key || !value) {
+                logger.warn(`Invalid key-value pair for secret: "${secret}"`);
+                return;
+            }
+
+            try {
+                const encryptedValue = await GithubApiManager.encryptValue(publicKeyValue, value);
+                const setResponse = await this.githubApiClient.setSecret(key, encryptedValue, publicKeyId);
+
+                if (setResponse.status === HttpStatusCode.Created) {
+                    logger.info(`Secret "${key}" created successfully.`);
+                } else if (setResponse.status === HttpStatusCode.NoContent) {
+                    logger.info(`Secret "${key}" updated successfully.`);
+                } else {
+                    logger.error(`Unexpected status when setting secret "${key}": ${setResponse.status}`);
+                }
+            } catch (error) {
+                logger.error(`Error setting secret "${key}": ${getErrorMessage(error)}`);
+            }
+        });
+
+        try {
+            await Promise.all(secretPromises);
+        } catch (error) {
+            throw new Error(`Failed to set one or more secrets: ${getErrorMessage(error)}`);
         }
     }
 }

@@ -32,44 +32,55 @@ interface GitHubActionsRunnerOptions {
  */
 interface RunActionOptions {
     /**
-     * Branch name.
+     * The name of the branch on which the GitHub Action workflow will run.
      */
     branch: string;
 
     /**
-     * Workflow name.
+     * The name of the GitHub Action workflow file to trigger (e.g., "test.yml").
      */
     workflow: string;
 
     /**
-     * Revision.
+     * The commit revision to be used in the GitHub Action workflow.
      */
     rev: string;
 
     /**
-     * Wait for commit timeout.
+     * Timeout in milliseconds to wait for the specified commit revision to appear in the repository.
      */
     commitTimeoutMs: number;
 
     /**
-     * Wait for branch timeout.
+     * Timeout in milliseconds to wait for the specified branch to appear in the repository.
      */
     branchTimeoutMs: number;
 
     /**
-     * Workflow run creation timeout.
+     * Timeout in milliseconds to wait for the workflow run to be created after triggering.
      */
     workflowRunCreationTimeoutMs: number;
 
     /**
-     * Workflow run completion timeout.
+     * Timeout in milliseconds to wait for the workflow run to complete.
      */
     workflowRunCompletionTimeoutMs: number;
 
     /**
-     * Artifacts path for saving artifacts. Optional. If not provided, artifacts will not be saved.
+     * Optional path to download artifacts from the workflow. If not specified, artifacts won't be saved.
      */
     artifactsPath?: string;
+
+    /**
+     * Optional array of secret key-value pairs to pass to the workflow. Each pair should be formatted as "KEY=VALUE".
+     */
+    secrets: string[];
+
+    /**
+     * Optional flag to sync secrets.
+     * If true, it will sync secrets with the repository and remove any secrets that are not in the provided list.
+     */
+    syncSecrets?: boolean;
 }
 
 /**
@@ -134,6 +145,8 @@ export class GitHubActionsRunner {
      * @param root0.branchTimeoutMs Wait for branch timeout.
      * @param root0.workflowRunCreationTimeoutMs Wait for workflow run creation timeout.
      * @param root0.workflowRunCompletionTimeoutMs Wait for workflow run completion timeout.
+     * @param root0.secrets Secrets to pass to the action.
+     * @param root0.syncSecrets Sync secrets with the repository.
      * @returns A promise that resolves when the action is completed.
      * @throws Error if something went wrong.
      */
@@ -146,6 +159,8 @@ export class GitHubActionsRunner {
         branchTimeoutMs,
         workflowRunCreationTimeoutMs,
         workflowRunCompletionTimeoutMs,
+        secrets,
+        syncSecrets,
     }: RunActionOptions): Promise<void> {
         logger.info(`Starting action for repository "${this.owner}/${this.repo}"`);
         logger.info(`Workflow: "${workflow}"`);
@@ -156,6 +171,8 @@ export class GitHubActionsRunner {
         // TODO wait for the tag, not sure if we need this
         await this.githubApiManager.waitForCommit(rev, commitTimeoutMs);
         await this.githubApiManager.waitForBranch(branch, branchTimeoutMs);
+
+        await this.githubApiManager.setSecrets(secrets, syncSecrets);
 
         const customWorkflowRunId = await this.githubApiManager.triggerWorkflow(workflow, branch);
         const workflowRunInfo = await this.githubApiManager.waitForWorkflowRunCreation(

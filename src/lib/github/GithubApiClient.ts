@@ -182,4 +182,65 @@ export class GithubApiClient {
             run_id: workflowRunId,
         }) as ResponseWithDownloadUrl;
     }
+
+    /**
+     * Gets the public key for the repository.
+     * The public key is used to encrypt secrets.
+     * @returns A promise that resolves to the public key.
+     */
+    async getPublicKey(): Promise<RestEndpointMethodTypes['actions']['getRepoPublicKey']['response']> {
+        return this.octokit.request('GET /repos/{owner}/{repo}/actions/secrets/public-key', {
+            owner: this.owner,
+            repo: this.repo,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28',
+            },
+        });
+    }
+
+    /**
+     * Sets a secret for the repository.
+     * @param key The secret key.
+     * @param encryptedValue The encrypted value.
+     * @param publicKeyId The public key id.
+     * @returns A promise that resolves to the response.
+     */
+    async setSecret(
+        key: string,
+        encryptedValue: string,
+        publicKeyId: string,
+    ): Promise<RestEndpointMethodTypes['actions']['createOrUpdateRepoSecret']['response']> {
+        return this.octokit.request('PUT /repos/{owner}/{repo}/actions/secrets/{secret_name}', {
+            owner: this.owner,
+            repo: this.repo,
+            secret_name: key,
+            encrypted_value: encryptedValue,
+            key_id: publicKeyId,
+        });
+    }
+
+    /**
+     * Lists all secrets for the repository.
+     * @returns A promise that resolves to the list of secrets.
+     */
+    async listSecrets(): Promise<RestEndpointMethodTypes['actions']['listRepoSecrets']['response']> {
+        return this.octokit.request('GET /repos/{owner}/{repo}/actions/secrets', {
+            owner: this.owner,
+            repo: this.repo,
+            per_page: PER_PAGE,
+        });
+    }
+
+    /**
+     * Deletes a secret from the repository.
+     * @param key The secret name.
+     * @returns A promise that resolves to the response.
+     */
+    async deleteSecret(key: string): Promise<RestEndpointMethodTypes['actions']['deleteRepoSecret']['response']> {
+        return this.octokit.request('DELETE /repos/{owner}/{repo}/actions/secrets/{secret_name}', {
+            owner: this.owner,
+            repo: this.repo,
+            secret_name: key,
+        });
+    }
 }

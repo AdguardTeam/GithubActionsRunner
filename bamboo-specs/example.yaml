@@ -46,7 +46,7 @@ Test:
               --branch "$branch" \
               --rev "$revision" \
               --workflow example.yml \
-              --artifacts-path .
+              --artifacts-path . \
   artifacts:
     - name: github-actions-runner.tgz
       pattern: github-actions-runner.tgz
