@@ -81,6 +81,11 @@ interface RunActionOptions {
      * If true, it will sync secrets with the repository and remove any secrets that are not in the provided list.
      */
     syncSecrets?: boolean;
+
+    /**
+     * A github-actions-runner version.
+     */
+    version: string;
 }
 
 /**
@@ -147,6 +152,7 @@ export class GitHubActionsRunner {
      * @param root0.workflowRunCompletionTimeoutMs Wait for workflow run completion timeout.
      * @param root0.secrets Secrets to pass to the action.
      * @param root0.syncSecrets Sync secrets with the repository.
+     * @param root0.version github actions runner version.
      * @returns A promise that resolves when the action is completed.
      * @throws Error if something went wrong.
      */
@@ -161,7 +167,9 @@ export class GitHubActionsRunner {
         workflowRunCompletionTimeoutMs,
         secrets,
         syncSecrets,
+        version,
     }: RunActionOptions): Promise<void> {
+        logger.info(`github-actions-runner version: ${version}`);
         logger.info(`Starting action for repository "${this.owner}/${this.repo}"`);
         logger.info(`Workflow: "${workflow}"`);
         logger.info(`Revision: "${rev}"`);
