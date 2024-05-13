@@ -169,7 +169,7 @@ export class GitHubActionsRunner {
         syncSecrets,
         version,
     }: RunActionOptions): Promise<void> {
-        logger.info(`github-actions-runner version: ${version}`);
+        logger.info(`Version: ${version}`);
         logger.info(`Starting action for repository "${this.owner}/${this.repo}"`);
         logger.info(`Workflow: "${workflow}"`);
         logger.info(`Revision: "${rev}"`);
