@@ -15,10 +15,9 @@ plan:
   key: GHACTIONSRUNEXAMPLE
   name: github-actions-runner - example
 variables:
-  # Using github-actions-runner Docker image for the latest stable version.
-  # latest-ci docker image does not have any entrypoint and has the
+  # This docker image does not have any entrypoint and has the
   # runner installed.
-  docker: ghcr.io/adguardteam/githubactionsrunner:latest-ci
+  docker: ghcr.io/adguardteam/githubactionsrunner:v1.1.1
 
 stages:
   - Test:
