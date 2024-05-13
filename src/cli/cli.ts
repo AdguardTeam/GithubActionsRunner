@@ -142,6 +142,7 @@ program.command('run-action')
                 workflowRunCompletionTimeoutMs: workflowRunCompletionTimeout,
                 secrets,
                 syncSecrets,
+                version: packageJson.version,
             });
         } catch (e) {
             logger.error(e);

@@ -92,12 +92,13 @@ export class GithubApiManager {
             return response.status === HttpStatusCode.Ok;
         } catch (error) {
             if (isErrorWithStatus(error)) {
+                logger.debug(`Get commit call for '${commitRef}' errored with status: "${error.status}"`);
                 if (error.status === HttpStatusCode.NotFound || error.status === HttpStatusCode.UnprocessableEntity) {
                     // Return false if the commit does not exist, or if the request is unprocessable
                     return false;
                 }
             }
-            throw error;
+            throw new Error(`Failed to retrieve commit '${commitRef}': ${getErrorMessage(error)}`);
         }
     }
 

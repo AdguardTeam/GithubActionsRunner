@@ -15,10 +15,9 @@ plan:
   key: GHACTIONSRUNEXAMPLE
   name: github-actions-runner - example
 variables:
-  # Using github-actions-runner Docker image for the latest stable version.
-  # latest-ci docker image does not have any entrypoint and has the
+  # This docker image does not have any entrypoint and has the
   # runner installed.
-  docker: ghcr.io/adguardteam/githubactionsrunner:latest-ci
+  docker: ghcr.io/adguardteam/githubactionsrunner:v1.1.1
 
 stages:
   - Test:
@@ -52,7 +51,7 @@ Test:
               --rev "${bamboo_planRepository_revision}" \
               --workflow example.yml \
               --artifacts-path . \
-              --secret SECRET_KEY=SECRET_VALUE
+              --secret SECRET_KEY=SECRET_VALUE \
   # The artifacts produced by the workflow are downloaded and shared with the
   # Bamboo CI job. These artifacts can be then shared with other unrelated
   # Bamboo builds.
